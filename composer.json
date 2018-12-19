@@ -1,0 +1,27 @@
+{
+  "name": "blockchainofthings/catenis-api-client-wp",
+  "description": "Catenis Enterprise API client plugin for WordPress",
+  "version": "1.0.0",
+  "type": "wordpress-plugin",
+  "keywords": [
+    "Wordpress",
+    "Catenis",
+    "blockchain"
+  ],
+  "require": {
+    "php": ">=5.6.0",
+    "blockchainofthings/catenis-api-client": "1.0.0"
+  },
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Cláudio de Castro",
+      "email": "claudio@blockchainofthings.com"
+    }
+  ],
+  "autoload": {
+    "psr-4": {
+      "Catenis\\WP\\": "src/"
+    }
+  }
+}
