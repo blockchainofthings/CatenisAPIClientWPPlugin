@@ -2,11 +2,17 @@
 
 namespace Catenis\WP;
 
+use stdClass;
 use Exception;
 use Catenis\WP\Catenis\ApiClient as CatenisApiClient;
+use Catenis\WP\Notification\NotificationCtrl;
+use Catenis\WP\Notification\CommPipe;
+use Catenis\WP\Notification\CommCommand;
 
 
 class ApiClient {
+    private static $heartbeatInterval = 15;     // 15 seconds
+
     private $pluginPath;
 
     private static function trimArray(&$arr) {
@@ -34,6 +40,49 @@ class ApiClient {
         }
     }
 
+    private static function getCtnClientData($postID) {
+        if (empty($postID) || empty($postMetadata = get_post_meta($postID, '_ctn_api_client', true))) {
+            return false;
+        }
+
+        // Prepare to instantiate Catenis API client
+        $globalCtnClientCredentials = get_option('ctn_client_credentials');
+        $ctnClientData = new stdClass();
+        $ctnClientData->ctnClientCredentials = new stdClass();
+        $ctnClientData->ctnClientCredentials->deviceId = !empty($postMetadata['ctn_device_id']) ? $postMetadata['ctn_device_id']
+            : (!empty($globalCtnClientCredentials['ctn_device_id']) ? $globalCtnClientCredentials['ctn_device_id'] : '');
+        $ctnClientData->ctnClientCredentials->apiAccessSecret = !empty($postMetadata['ctn_api_access_secret']) ? $postMetadata['ctn_api_access_secret']
+            : (!empty($globalCtnClientCredentials['ctn_api_access_secret']) ? $globalCtnClientCredentials['ctn_api_access_secret'] : '');
+
+        $globalCtnClientOptions = get_option('ctn_client_options');
+        $options = [];
+
+        if (!empty($postMetadata['ctn_host'])) {
+            $options['host'] = $postMetadata['ctn_host'];
+        }
+        elseif (!empty($globalCtnClientOptions['ctn_host'])) {
+            $options['host'] = $globalCtnClientOptions['ctn_host'];
+        }
+
+        if (!empty($postMetadata['ctn_environment'])) {
+            $options['environment'] = $postMetadata['ctn_environment'];
+        }
+        elseif (!empty($globalCtnClientOptions['ctn_environment'])) {
+            $options['environment'] = $globalCtnClientOptions['ctn_environment'];
+        }
+
+        if (!empty($postMetadata['ctn_secure'])) {
+            $options['secure'] = $postMetadata['ctn_secure'] === 'on';
+        }
+        elseif (!empty($globalCtnClientOptions['ctn_secure'])) {
+            $options['secure'] = $globalCtnClientOptions['ctn_secure'] === 'on';
+        }
+
+        $ctnClientData->ctnClientOptions = !empty($options) ? $options : null;
+
+        return $ctnClientData;
+    }
+
     public static function sanitizeOptions($opts) {
         self::trimArray($opts);
 
@@ -47,9 +96,20 @@ class ApiClient {
         add_action('admin_init', [$this, 'adminInitHandler']);
         add_action('admin_menu', [$this, 'adminMenuHandler']);
         add_action('wp_enqueue_scripts', [$this, 'enqueueScriptsHandler']);
+
+        // Setup AJAX methods
         add_action('wp_ajax_call_api_method', [$this, 'callApiMethod']);
+        add_action('wp_ajax_open_notify_channel', [$this, 'openNotifyChannel']);
+        add_action('wp_ajax_close_notify_channel', [$this, 'closeNotifyChannel']);
         // Note: the following is required so non-logged-in users can execute the ajax call
         add_action('wp_ajax_nopriv_call_api_method', [$this, 'callApiMethod']);
+        add_action('wp_ajax_nopriv_open_notify_channel', [$this, 'openNotifyChannel']);
+        add_action('wp_ajax_nopriv_close_notify_channel', [$this, 'closeNotifyChannel']);
+
+        // Prepare for receiving heartbeat
+        add_filter('heartbeat_settings', [$this, 'setHeartbeatInterval'], 10, 1);
+        add_filter('heartbeat_received', [$this, 'processHeartbeat'], 10, 2);
+        add_filter('heartbeat_nopriv_received', [$this, 'processHeartbeat'], 10, 2);
     }
 
     function enqueueScriptsHandler() {
@@ -60,18 +120,33 @@ class ApiClient {
             $postMetadata = get_post_meta($post->ID, '_ctn_api_client', true);
 
             if (!empty($postMetadata['ctn_load_client']) && $postMetadata['ctn_load_client'] === 'on') {
+                // Register JavaScript modules it depends on
+                wp_register_script('heir', plugins_url('/js/lib/heir.js', $this->pluginPath));
+                wp_register_script('event_emitter', plugins_url('/js/lib/EventEmitter.min.js', $this->pluginPath));
+
                 wp_enqueue_script('ctn_api_proxy',
                     plugins_url('/js/CatenisApiProxy.js', $this->pluginPath),
-                    ['jquery']
+                    ['jquery', 'heir', 'event_emitter']
                 );
+
+                try {
+                    $clientUID = random_int(1, 9999999999);
+                }
+                catch (Exception $ex) {
+                    $clientUID = rand(1, 9999999999);
+                }
 
                 wp_localize_script('ctn_api_proxy',
                     'ctn_api_proxy_obj', [
                         'ajax_url' => admin_url('admin-ajax.php'),
                         'nonce' => wp_create_nonce(__FILE__),
-                        'post_id' => $post->ID
+                        'post_id' => $post->ID,
+                        'client_uid' => $clientUID
                     ]
                 );
+
+                // Activate heartbeat API
+                wp_enqueue_script('heartbeat');
             }
         }
     }
@@ -252,46 +327,18 @@ class ApiClient {
         check_ajax_referer(__FILE__);
 
         $postID = $_POST['post_id'];
+        $ctnClientData = self::getCtnClientData($postID);
 
-        if (empty($postID) || empty($postMetadata = get_post_meta($postID, '_ctn_api_client', true))) {
+        if (!$ctnClientData) {
             wp_send_json_error('Invalid or undefined post ID', 500);
-            return;
-        }
-
-        // Prepare to instantiate Catenis API client
-        $globalCtnClientCredentials = get_option('ctn_client_credentials');
-        $deviceId = !empty($postMetadata['ctn_device_id']) ? $postMetadata['ctn_device_id']
-                : (!empty($globalCtnClientCredentials['ctn_device_id']) ? $globalCtnClientCredentials['ctn_device_id'] : '');
-        $apiAccessSecret = !empty($postMetadata['ctn_api_access_secret']) ? $postMetadata['ctn_api_access_secret']
-                : (!empty($globalCtnClientCredentials['ctn_api_access_secret']) ? $globalCtnClientCredentials['ctn_api_access_secret'] : '');
-
-        $globalCtnClientOptions = get_option('ctn_client_options');
-        $options = [];
-
-        if (!empty($postMetadata['ctn_host'])) {
-            $options['host'] = $postMetadata['ctn_host'];
-        }
-        elseif (!empty($globalCtnClientOptions['ctn_host'])) {
-            $options['host'] = $globalCtnClientOptions['ctn_host'];
-        }
-
-        if (!empty($postMetadata['ctn_environment'])) {
-            $options['environment'] = $postMetadata['ctn_environment'];
-        }
-        elseif (!empty($globalCtnClientOptions['ctn_environment'])) {
-            $options['environment'] = $globalCtnClientOptions['ctn_environment'];
-        }
-
-        if (!empty($postMetadata['ctn_secure'])) {
-            $options['secure'] = $postMetadata['ctn_secure'] === 'on';
-        }
-        elseif (!empty($globalCtnClientOptions['ctn_secure'])) {
-            $options['secure'] = $globalCtnClientOptions['ctn_secure'] === 'on';
         }
 
         try {
             // Instantiate Catenis API client
-            $ctnApiClient = new CatenisApiClient($deviceId, $apiAccessSecret, !empty($options) ? $options : null);
+            $ctnApiClient = new CatenisApiClient($ctnClientData->ctnClientCredentials->deviceId,
+                $ctnClientData->ctnClientCredentials->apiAccessSecret,
+                $ctnClientData->ctnClientOptions
+            );
         }
         catch (Exception $ex) {
             wp_send_json_error('Error instantiating Catenis API client: ' . $ex->getMessage(), 500);
@@ -310,5 +357,205 @@ class ApiClient {
         } catch (Exception $ex) {
             wp_send_json_error($ex->getMessage(), 500);
         }
+    }
+
+    function openNotifyChannel() {
+        check_ajax_referer(__FILE__);
+
+        $clientUID = $_POST['client_uid'];
+
+        if (!$clientUID) {
+            wp_send_json_error('Missing client UID', 500);
+        }
+
+        try {
+            $commPipe = new CommPipe($clientUID, true);
+        }
+        catch (Exception $ex) {
+            wp_send_json_error('Error opening communication pipe: ' . $ex->getMessage(), 500);
+        }
+
+        $commCommand = new CommCommand($commPipe);
+
+        if (!$commPipe->werePipesAlreadyCreated()) {
+            // Run (child) process to handle Catenis notifications
+            NotificationCtrl::execProcess($clientUID);
+
+            // Send initialization data (so child process can instantiate Catenis API client)
+            $postID = $_POST['post_id'];
+            $ctnClientData = self::getCtnClientData($postID);
+
+            if (!$ctnClientData) {
+                $commPipe->delete();
+                wp_send_json_error('Invalid or undefined post ID', 500);
+            }
+
+            try {
+                $commCommand->sendInitCommand($ctnClientData);
+            }
+            catch (Exception $ex) {
+                $commPipe->delete();
+                wp_send_json_error('Error sending init command: ' . $ex->getMessage(), 500);
+            }
+
+            // Wait for response
+            $errorMsg = '';
+
+            try {
+                if ($commCommand->receive()) {
+                    $command = $commCommand->getNextCommand();
+
+                    if (($commandType = CommCommand::commandType($command)) !== CommCommand::INIT_RESPONSE_CMD) {
+                        $errorMsg = 'Unexpected response from notification process: ' . $commandType;
+                    }
+                    elseif (!$command->data->success) {
+                        $errorMsg = $command->data->error;
+                    }
+                }
+                else {
+                    $errorMsg = 'No response from notification process';
+                }
+            }
+            catch (Exception $ex) {
+                $errorMsg = 'Error while retrieving response from notification process: ' . $ex->getMessage();
+            }
+
+            if (!empty($errorMsg)) {
+                // Error initializing notification process. Make sure that communication pipes are deleted
+                $commPipe->delete();
+                wp_send_json_error('Error while initializing notification process: ' . $errorMsg, 500);
+            }
+        }
+
+        // Send command to open notification channel
+        $eventName = $_POST['event_name'];
+
+        try {
+            $commCommand->sendOpenNotifyChannelCommand($eventName);
+        }
+        catch (Exception $ex) {
+            wp_send_json_error('Error sending open notification channel command: ' . $ex->getMessage(), 500);
+        }
+
+        $commPipe->close();
+        wp_send_json_success();
+    }
+
+    function closeNotifyChannel() {
+        check_ajax_referer(__FILE__);
+
+        $clientUID = $_POST['client_uid'];
+
+        if (!$clientUID) {
+            wp_send_json_error('Missing client UID', 500);
+        }
+
+        try {
+            $commPipe = new CommPipe($clientUID, true, CommPipe::SEND_COMM_MODE);
+        }
+        catch (Exception $ex) {
+            wp_send_json_error('Error opening communication pipe: ' . $ex->getMessage(), 500);
+        }
+
+        $commCommand = new CommCommand($commPipe);
+
+        if ($commPipe->werePipesAlreadyCreated()) {
+            // Send command to close notification channel
+            $eventName = $_POST['event_name'];
+
+            try {
+                $commCommand->sendCloseNotifyChannelCommand($eventName);
+            }
+            catch (Exception $ex) {
+                wp_send_json_error('Error sending close notification channel command: ' . $ex->getMessage(), 500);
+            }
+        }
+        else {
+            // Communication pipes were not yet open. Assume notification channel is already closed
+            $commPipe->delete();
+        }
+
+        $commPipe->close();
+        wp_send_json_success();
+    }
+
+    function setHeartbeatInterval($settings) {
+        $settings['interval'] = self::$heartbeatInterval;
+        return $settings;
+    }
+
+    function processHeartbeat($response, $data) {
+        $clientUID = $data['client_uid'];
+
+        if (!$clientUID) {
+            // Return error
+            $response['success'] = false;
+            $response['error'] = 'Missing client UID';
+
+            return $response;
+        }
+
+        try {
+            $commPipe = new CommPipe($clientUID, true);
+        }
+        catch (Exception $ex) {
+            // Return error
+            $response['success'] = false;
+            $response['error'] = 'Error opening communication pipe: ' . $ex->getMessage();
+
+            return $response;
+        }
+
+        $commCommand = new CommCommand($commPipe);
+
+        if ($commPipe->werePipesAlreadyCreated()) {
+            // Send ping command
+            try {
+                $commCommand->sendPingCommand();
+            }
+            catch (Exception $ex) {
+                // Return error
+                $response['success'] = false;
+                $response['error'] = 'Error sending ping command: ' . $ex->getMessage();
+
+                return $response;
+            }
+
+            // Retrieve received commands
+            $notifyProcCommands = [];
+
+            try {
+                if ($commCommand->receive()) {
+                    do {
+                        $notifyProcCommands[]= json_encode($commCommand->getNextCommand());
+                    }
+                    while ($commCommand->hasReceivedCommand());
+                }
+            }
+            catch (Exception $ex) {
+                // Return error
+                $response['success'] = false;
+                $response['error'] = 'Error while retrieving response from notification process: ' . $ex->getMessage();
+
+                return $response;
+            }
+
+            // Prepare to return indicating success
+            $response['success'] = true;
+
+            if (!empty($notifyProcCommands)) {
+                // Add notification process commands to response
+                $response['notifyCommands'] = implode('|', $notifyProcCommands);
+            }
+        }
+        else {
+            // Communication pipes were not yet open. Assume notification channel not yet open
+            $response['success'] = true;
+            $commPipe->delete();
+        }
+
+        $commPipe->close();
+
+        return $response;
     }
 }

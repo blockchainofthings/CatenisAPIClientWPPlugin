@@ -10,7 +10,9 @@
   ],
   "require": {
     "php": ">=5.6.0",
-    "blockchainofthings/catenis-api-client": "1.0.0"
+    "ext-posix": "*",
+    "blockchainofthings/catenis-api-client": "1.0.0",
+    "react/event-loop": "^1.0"
   },
   "license": "MIT",
   "authors": [
