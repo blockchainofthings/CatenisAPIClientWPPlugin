@@ -28,11 +28,11 @@ class CommPipe {
      *                             Catenis API client plugin
      * @param bool $isParent - Indicates whether this is being called from the plugin's process
      * @param int $commMode - Type of communication required
+     * @param bool $createPipes - Indicates whether communication pipes should be created if they do not exist yet
      * @throws Exception
      */
-    function __construct($clientUID, $isParent = true, $commMode = self::SEND_COMM_MODE | self::RECEIVE_COMM_MODE) {
+    function __construct($clientUID, $isParent = true, $commMode = self::SEND_COMM_MODE | self::RECEIVE_COMM_MODE, $createPipes = false) {
         $this->clientUID = $clientUID;
-        $this->isParent = $isParent;
         $this->commMode = $commMode;
         
         $baseFifoPathName = __DIR__ . '/../../io/' . $clientUID;
@@ -48,9 +48,9 @@ class CommPipe {
 
         $this->inputFifoDidNotExist = true;
 
-        // Make sure that fifos are created
+        // Check if fifos exist and create them as required
         if (!file_exists($this->inputFifoPath)) {
-            if ($isParent) {
+            if ($createPipes) {
                 if (!posix_mkfifo($this->inputFifoPath, 0600)) {
                     throw new Exception(sprintf('Error creating communication input fifo: ' . posix_strerror(posix_get_last_error())));
                 }
@@ -63,7 +63,7 @@ class CommPipe {
         $this->outputFifoDidNotExist = true;
 
         if (!file_exists($this->outputFifoPath)) {
-            if ($isParent) {
+            if ($createPipes) {
                 if (!posix_mkfifo($this->outputFifoPath, 0600)) {
                     // Delete other fifo to be consistent
                     @unlink($this->inputFifoPath);
@@ -76,11 +76,11 @@ class CommPipe {
         }
 
         // Open fifos as required
-        if ($this->commMode & self::RECEIVE_COMM_MODE) {
+        if (($this->commMode & self::RECEIVE_COMM_MODE) && file_exists($this->inputFifoPath)) {
             $this->inputFifo = fopen($this->inputFifoPath, 'r+');
 
             if ($this->inputFifo === false) {
-                if ($isParent && !$this->werePipesAlreadyCreated()) {
+                if ($createPipes && !$this->werePipesAlreadyCreated()) {
                     // Delete pipes to be consistent
                     $this->delete();
                 }
@@ -91,11 +91,11 @@ class CommPipe {
             stream_set_blocking($this->inputFifo, false);
         }
 
-        if ($this->commMode & self::SEND_COMM_MODE) {
+        if (($this->commMode & self::SEND_COMM_MODE) && file_exists($this->outputFifoPath)) {
             $this->outputFifo = fopen($this->outputFifoPath, 'w+');
 
             if ($this->outputFifo === false) {
-                if ($isParent && !$this->werePipesAlreadyCreated()) {
+                if ($createPipes && !$this->werePipesAlreadyCreated()) {
                     // Delete pipes to be consistent
                     $this->delete();
                 }
@@ -113,6 +113,10 @@ class CommPipe {
 
     function getInputPipe() {
         return $this->inputFifo;
+    }
+
+    function pipesExist() {
+        return file_exists($this->inputFifoPath) && file_exists($this->outputFifoPath);
     }
 
     function werePipesAlreadyCreated() {
@@ -134,8 +138,13 @@ class CommPipe {
     function delete() {
         $this->close();
 
-        @unlink($this->inputFifoPath);
-        @unlink($this->outputFifoPath);
+        if (file_exists($this->inputFifoPath)) {
+            @unlink($this->inputFifoPath);
+        }
+
+        if (file_exists($this->outputFifoPath)) {
+            @unlink($this->outputFifoPath);
+        }
     }
 
     /**

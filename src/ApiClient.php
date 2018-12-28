@@ -369,7 +369,7 @@ class ApiClient {
         }
 
         try {
-            $commPipe = new CommPipe($clientUID, true);
+            $commPipe = new CommPipe($clientUID, true, CommPipe::SEND_COMM_MODE | CommPipe::RECEIVE_COMM_MODE, true);
         }
         catch (Exception $ex) {
             wp_send_json_error('Error opening communication pipe: ' . $ex->getMessage(), 500);
@@ -457,9 +457,11 @@ class ApiClient {
             wp_send_json_error('Error opening communication pipe: ' . $ex->getMessage(), 500);
         }
 
-        $commCommand = new CommCommand($commPipe);
+        // Make sure that communication pipes exist. If they do not, assume that
+        //  notification channel is already closed and do nothing
+        if ($commPipe->pipesExist()) {
+            $commCommand = new CommCommand($commPipe);
 
-        if ($commPipe->werePipesAlreadyCreated()) {
             // Send command to close notification channel
             $eventName = $_POST['event_name'];
 
@@ -469,13 +471,10 @@ class ApiClient {
             catch (Exception $ex) {
                 wp_send_json_error('Error sending close notification channel command: ' . $ex->getMessage(), 500);
             }
-        }
-        else {
-            // Communication pipes were not yet open. Assume notification channel is already closed
-            $commPipe->delete();
+
+            $commPipe->close();
         }
 
-        $commPipe->close();
         wp_send_json_success();
     }
 
@@ -506,9 +505,11 @@ class ApiClient {
             return $response;
         }
 
-        $commCommand = new CommCommand($commPipe);
+        // Make sure that communication pipes exist. If they do not, assume that
+        //  notification channel is not yet open and do nothing
+        if ($commPipe->pipesExist()) {
+            $commCommand = new CommCommand($commPipe);
 
-        if ($commPipe->werePipesAlreadyCreated()) {
             // Send ping command
             try {
                 $commCommand->sendPingCommand();
@@ -547,14 +548,13 @@ class ApiClient {
                 // Add notification process commands to response
                 $response['notifyCommands'] = implode('|', $notifyProcCommands);
             }
+
+            $commPipe->close();
         }
         else {
-            // Communication pipes were not yet open. Assume notification channel not yet open
+            // Notification channel not yet open. Just return indicating success
             $response['success'] = true;
-            $commPipe->delete();
         }
-
-        $commPipe->close();
 
         return $response;
     }
