@@ -143,7 +143,7 @@ class CommPipe {
      * @return string - The data read
      * @throws Exception
      */
-    function receive($timeout = 15) {
+    function receive($timeout = 5) {
         if (!$this->inputFifo) {
             throw new Exception('Cannot receive data; input pipe not open');
         }
