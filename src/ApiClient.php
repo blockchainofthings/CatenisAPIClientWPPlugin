@@ -89,8 +89,23 @@ class ApiClient {
         return $opts;
     }
 
+    public static function uninstall() {
+        // Delete all plugin's meta options
+        delete_post_meta_by_key('_ctn_api_client');
+
+        // Remove plugin's options
+        unregister_setting( 'ctn_api_client_opts', 'ctn_client_credentials');
+        unregister_setting( 'ctn_api_client_opts', 'ctn_client_options');
+
+        delete_option('ctn_client_credentials');
+        delete_option('ctn_client_options');
+    }
+
     function __construct($pluginPath) {
         $this->pluginPath = $pluginPath;
+
+        register_activation_hook($pluginPath, [$this, 'activate']);
+        register_uninstall_hook($pluginPath, ['\Catenis\WP\ApiClient', 'uninstall']);
 
         // Wire up action handlers
         add_action('admin_init', [$this, 'adminInitHandler']);
