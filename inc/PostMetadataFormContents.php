@@ -52,7 +52,7 @@
                 <label for="ctn_host">Host</label>
             </th>
             <td>
-                <input type="text" id="ctn_host" name="ctn_client_options[ctn_host]" class="regular-text" maxlength="80" autocomplete="off"
+                <input type="text" id="ctn_host" name="_ctn_api_client[ctn_host]" class="regular-text" maxlength="80" autocomplete="off"
                         <?php echo !empty($postMetadata['ctn_host']) ? 'value="' . esc_attr($postMetadata['ctn_host']) . '"' : '' ?>>
             </td>
         </tr>
@@ -60,7 +60,7 @@
             <th scope="row"><label for="ctn_environment">Environment</label>
             </th>
             <td>
-                <select id="ctn_environment" name="ctn_client_options[ctn_environment]">
+                <select id="ctn_environment" name="_ctn_api_client[ctn_environment]">
                     <option value=""></option>
                     <option value="prod" <?php echo !empty($postMetadata['ctn_environment']) ? selected($postMetadata['ctn_environment'], 'prod', false) : ''; ?>>Production</option>
                     <option value="sandbox" <?php echo !empty($postMetadata['ctn_environment']) ? selected($postMetadata['ctn_environment'], 'sandbox', false) : ''; ?>>Sandbox</option>
@@ -72,7 +72,7 @@
                 <label for="ctn_secure">Secure Connection</label>
             </th>
             <td>
-                <select id="ctn_secure" name="ctn_client_options[ctn_secure]">
+                <select id="ctn_secure" name="_ctn_api_client[ctn_secure]">
                     <option value=""></option>
                     <option value="on" <?php echo !empty($postMetadata['ctn_secure']) ? selected($postMetadata['ctn_secure'], 'on', false) : ''; ?>>On</option>
                     <option value="off" <?php echo !empty($postMetadata['ctn_secure']) ? selected($postMetadata['ctn_secure'], 'off', false) : ''; ?>>Off</option>
