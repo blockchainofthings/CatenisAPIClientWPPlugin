@@ -112,6 +112,14 @@ class ApiClient {
         add_filter('heartbeat_nopriv_received', [$this, 'processHeartbeat'], 10, 2);
     }
 
+    function activate() {
+        // Make sure that directory used to hold fifos for communication with
+        //  notification process exists
+        if (!file_exists(__DIR__ . '/../io')) {
+            mkdir(__DIR__ . '/../io', 0700);
+        }
+    }
+
     function enqueueScriptsHandler() {
         global $post;
 
