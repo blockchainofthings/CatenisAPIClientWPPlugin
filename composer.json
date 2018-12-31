@@ -8,10 +8,17 @@
     "Catenis",
     "blockchain"
   ],
+  "repositories": [
+    {
+      "type": "vcs",
+      "url": "https://github.com/claudiosdc/Pawl.git"
+    }
+  ],
   "require": {
     "php": ">=5.6.0",
     "ext-posix": "*",
-    "blockchainofthings/catenis-api-client": "1.0.0",
+    "ratchet/pawl": "dev-Fix",
+    "blockchainofthings/catenis-api-client": "^1.0.2",
     "react/event-loop": "^1.0"
   },
   "license": "MIT",

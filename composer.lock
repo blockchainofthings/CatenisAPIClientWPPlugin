@@ -4,20 +4,20 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "ec85f1ad1c460291053fe69ab96d6e4c",
+    "content-hash": "4bac8e454d4de57d211a8859793a10b9",
     "packages": [
         {
             "name": "blockchainofthings/catenis-api-client",
-            "version": "1.0.0",
+            "version": "1.0.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/blockchainofthings/CatenisAPIClientPHP.git",
-                "reference": "59345b2b19ba33094cac62394d9fc4b97df7d343"
+                "reference": "6fc835f041cd667bfc4463eab11fc686fd550961"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/blockchainofthings/CatenisAPIClientPHP/zipball/59345b2b19ba33094cac62394d9fc4b97df7d343",
-                "reference": "59345b2b19ba33094cac62394d9fc4b97df7d343",
+                "url": "https://api.github.com/repos/blockchainofthings/CatenisAPIClientPHP/zipball/6fc835f041cd667bfc4463eab11fc686fd550961",
+                "reference": "6fc835f041cd667bfc4463eab11fc686fd550961",
                 "shasum": ""
             },
             "require": {
@@ -25,7 +25,7 @@
                 "ext-json": "*",
                 "guzzlehttp/guzzle": "~6.0",
                 "php": ">=5.6.0",
-                "ratchet/pawl": "^0.3.2",
+                "ratchet/pawl": "dev-Fix",
                 "wyrihaximus/react-guzzle-psr7": "^2.1"
             },
             "require-dev": {
@@ -48,7 +48,7 @@
                 }
             ],
             "description": "Catenis Enterprise API client library for PHP",
-            "time": "2018-12-07T22:48:02+00:00"
+            "time": "2018-12-31T17:16:31+00:00"
         },
         {
             "name": "clue/buzz-react",
@@ -540,16 +540,16 @@
         },
         {
             "name": "ratchet/pawl",
-            "version": "v0.3.2",
+            "version": "dev-Fix",
             "source": {
                 "type": "git",
-                "url": "https://github.com/ratchetphp/Pawl.git",
-                "reference": "85ca3b4a85254cf2ac4309ef42d427820770ae31"
+                "url": "https://github.com/claudiosdc/Pawl.git",
+                "reference": "00a49ef612aa62d186f16429353edd1eae6583f9"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/ratchetphp/Pawl/zipball/85ca3b4a85254cf2ac4309ef42d427820770ae31",
-                "reference": "85ca3b4a85254cf2ac4309ef42d427820770ae31",
+                "url": "https://api.github.com/repos/claudiosdc/Pawl/zipball/00a49ef612aa62d186f16429353edd1eae6583f9",
+                "reference": "00a49ef612aa62d186f16429353edd1eae6583f9",
                 "shasum": ""
             },
             "require": {
@@ -573,19 +573,21 @@
                     "src/functions_include.php"
                 ]
             },
-            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "MIT"
             ],
             "description": "Asynchronous WebSocket client",
             "keywords": [
                 "Ratchet",
+                "WebSocket",
                 "async",
                 "client",
-                "websocket",
                 "websocket client"
             ],
-            "time": "2018-05-22T21:45:08+00:00"
+            "support": {
+                "source": "https://github.com/claudiosdc/Pawl/tree/Fix"
+            },
+            "time": "2018-12-31T14:44:01+00:00"
         },
         {
             "name": "ratchet/rfc6455",
@@ -1258,7 +1260,9 @@
     "packages-dev": [],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": [],
+    "stability-flags": {
+        "ratchet/pawl": 20
+    },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {

@@ -20,6 +20,8 @@ else
 fi
 
 cp -R $SCRIPT_DIR/../vendor/* $THIRDPARTY_DIR/
+# Make sure that .git directories are removed
+rm -rf $(find $THIRDPARTY_DIR -name .git -type d -print)
 
 echo -n "Fixing namespace of third party packages... "
 
