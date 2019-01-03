@@ -18,7 +18,7 @@
     "php": ">=5.6.0",
     "ext-posix": "*",
     "ratchet/pawl": "dev-Fix",
-    "blockchainofthings/catenis-api-client": "^1.0.2",
+    "blockchainofthings/catenis-api-client": "^1.0.3",
     "react/event-loop": "^1.0"
   },
   "license": "MIT",

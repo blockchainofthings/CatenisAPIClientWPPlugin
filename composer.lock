@@ -4,20 +4,20 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "4bac8e454d4de57d211a8859793a10b9",
+    "content-hash": "456154b1a78a42fd3b4df40427d3caba",
     "packages": [
         {
             "name": "blockchainofthings/catenis-api-client",
-            "version": "1.0.2",
+            "version": "1.0.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/blockchainofthings/CatenisAPIClientPHP.git",
-                "reference": "6fc835f041cd667bfc4463eab11fc686fd550961"
+                "reference": "a105872a0411af5c113c677e91a4e36aeb98e8f2"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/blockchainofthings/CatenisAPIClientPHP/zipball/6fc835f041cd667bfc4463eab11fc686fd550961",
-                "reference": "6fc835f041cd667bfc4463eab11fc686fd550961",
+                "url": "https://api.github.com/repos/blockchainofthings/CatenisAPIClientPHP/zipball/a105872a0411af5c113c677e91a4e36aeb98e8f2",
+                "reference": "a105872a0411af5c113c677e91a4e36aeb98e8f2",
                 "shasum": ""
             },
             "require": {
@@ -48,7 +48,7 @@
                 }
             ],
             "description": "Catenis Enterprise API client library for PHP",
-            "time": "2018-12-31T17:16:31+00:00"
+            "time": "2019-01-02T11:20:35+00:00"
         },
         {
             "name": "clue/buzz-react",
@@ -1012,16 +1012,16 @@
         },
         {
             "name": "react/stream",
-            "version": "v1.0.0",
+            "version": "v1.1.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/reactphp/stream.git",
-                "reference": "fdd0140f42805d65bf9687636503db0b326d2244"
+                "reference": "50426855f7a77ddf43b9266c22320df5bf6c6ce6"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/reactphp/stream/zipball/fdd0140f42805d65bf9687636503db0b326d2244",
-                "reference": "fdd0140f42805d65bf9687636503db0b326d2244",
+                "url": "https://api.github.com/repos/reactphp/stream/zipball/50426855f7a77ddf43b9266c22320df5bf6c6ce6",
+                "reference": "50426855f7a77ddf43b9266c22320df5bf6c6ce6",
                 "shasum": ""
             },
             "require": {
@@ -1054,7 +1054,7 @@
                 "stream",
                 "writable"
             ],
-            "time": "2018-07-11T14:38:16+00:00"
+            "time": "2019-01-01T16:15:09+00:00"
         },
         {
             "name": "ringcentral/psr7",
