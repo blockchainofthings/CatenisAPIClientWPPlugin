@@ -1,7 +1,8 @@
 === Catenis API Client for WordPress ===
-Tags: Catenis, blockchain
+Contributors: catenisadmin
+Tags: Catenis, Catenis Enterprise API, Blockchain of Things, blockchain
 Requires at least: 4.0
-Tested up to: 5.0
+Tested up to: 5.0.2
 Requires PHP: 5.6
 Stable tag: 1.1.0
 License: MIT
@@ -41,9 +42,26 @@ Errors that take place while calling the Catenis API methods are returned as sta
 1. Upload the plugin files to the "/wp-content/plugins/" directory.
 1. Activate the plugin through the "Plugins" menu in WordPress.
 1. Go to "Settings" | "Catenis API Client" to configure the global settings for instantiating the Catenis API client.
-1. A meta box named "Catenis API Client" will be available on every WordPress page\'s edit page. Use it to make the Catenis API client available from a given page, and optionally configure custom settings for instantiating the Catenis API client for that given page.
+1. A meta box named "Catenis API Client" will be available on every WordPress page's edit page. Use it to make the Catenis API client available from a given page, and optionally configure custom settings for instantiating the Catenis API client for that given page.
 
 Please refer to [Catenis Enterprise API documentation](https://www.catenis.com/docs/api) for further information on accessing the Catenis Enterprise API.
+
+== Frequently Asked Questions ==
+
+= What client options settings should I use to connect with the Catenis Enterprise API sandbox environment? =
+
+When doing it on the plugin's global settings ("Settings" | "Catenis API Client"), just leave all fields of the "Client Options" section blank.
+
+However, when doing it on the "Catenis API Client" meta box on a WordPress page's edit page, use the following settings to make sure that all client options fields of the plugin's global settings are properly overridden:
+- Host: `catenis.io`
+- Environment: `sandbox`
+- Secure Connection: `On`
+
+== Screenshots ==
+
+1. The plugin's global settings menu
+
+2. The "Catenis API Client" meta box on a WordPress page's edit page.
 
 == Changelog ==
 
@@ -57,7 +75,7 @@ Please refer to [Catenis Enterprise API documentation](https://www.catenis.com/d
 == Upgrade Notice ==
 
 = 1.1.0 =
-All users are advised to upgrade to this version even if not planning to use notifications since it also adds some enhancements and fixes to the basic functionality.
+All users are advised to upgrade to this version even if not planning to use notifications since it also adds several enhancements and fixes to the basic functionality.
 
 == Receiving Notifications ==
 
