@@ -10,6 +10,7 @@
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null && pwd)"
 THIRDPARTY_DIR="$SCRIPT_DIR/../thirdparty"
+PLUGIN_SLUG="catenis-api-client"
 
 if [[ -d $THIRDPARTY_DIR ]]; then
     echo "Third party directory already exists. Emptying it"
@@ -25,6 +26,7 @@ rm -rf $(find $THIRDPARTY_DIR -name .git -type d -print)
 
 echo -n "Fixing namespace of third party packages... "
 
+# Change namespace of third-party components moving them under our own plugin namespace
 for f in $(find $THIRDPARTY_DIR -name "*.php" -print); do
    sed -i "" -E "s/^namespace +([A-Za-z][A-Za-z0-9_\\]*);/namespace Catenis\\\WP\\\\\1;/g" $f
    sed -i "" -E "s/^use +([A-Za-z][A-Za-z0-9_]*\\\)/use Catenis\\\WP\\\\\1/g" $f
@@ -42,11 +44,16 @@ sed -i "" -E "s/( +')Evenement'/\1Catenis\\\\\\\WP\\\\\\\Evenement'/g" $THIRDPAR
 
 sed -i "" -E "s/('| | \\\\|\(\\\\)Composer\\\\Autoload/\1Catenis\\\\WP\\\\Composer\\\\Autoload/g" $THIRDPARTY_DIR/composer/autoload_real.php
 
+# Properly reindex PSR0 and PSR4 components (used by Composer autoloader) to match the changed namespace
 sed -i "" -e ':a' -e 'N' -e '$!ba' -e "s/\(\n\) \{1,\}),\n \{1,\}'[A-Z]' => \n \{1,\}array (\n/\1/g" $THIRDPARTY_DIR/composer/autoload_static.php
 sed -i "" -e "s/^\( \{1,\}'\)[A-Z]\(' => \)$/\1C\2/g" $THIRDPARTY_DIR/composer/autoload_static.php
 sed -i "" -e "s/ => \([0-9]\{1,\}\),$/ => \1+11,/g" $THIRDPARTY_DIR/composer/autoload_static.php
 sed -i "" -e "s/\('Catenis\\\\\\\\WP\\\\\\\\' => 11\)+11/\1/" $THIRDPARTY_DIR/composer/autoload_static.php
 
+# Change (localize) IDs of functions files loaded by Composer autoloader
+sed -i "" -E "s/^(( |\t)+)'([a-f0-9]{32})' =>/\1'${PLUGIN_SLUG}_\3' =>/" $THIRDPARTY_DIR/composer/autoload_{files,static}.php
+
+# Redefine directory paths of PSR0 components
 mkdir $THIRDPARTY_DIR/evenement/evenement/src/Catenis && mkdir $THIRDPARTY_DIR/evenement/evenement/src/Catenis/WP && mv $THIRDPARTY_DIR/evenement/evenement/src/Evenement $THIRDPARTY_DIR/evenement/evenement/src/Catenis/WP/
 
 # Add missing namespace
