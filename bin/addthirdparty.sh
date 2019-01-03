@@ -67,4 +67,8 @@ for f in $(find $THIRDPARTY_DIR/guzzlehttp -name "*.php" -print); do
     sed -i "" -E "s/getallheaders\(/Catenis\\\\WP\\\\getallheaders(/" $f
 done
 
+# Patch code to avoid security threat warning from VaultPress
+sed -i "" -E "s/^(( |\t)+)return \\\$handler\\(\\\$fn\\(\\\$request), \\\$options);$/\1\\\$fn_result = \\\$fn\\(\\\$request); return \\\$handler\\(\\\$fn_result, \\\$options);/" $THIRDPARTY_DIR/guzzlehttp/guzzle/src/Middleware.php
+sed -i "" -E "s/^(( |\t)+)\\\$notify\\(\\\$onProgress\\(\\\$update));$/\1\\\$onProgress_result = \\\$onProgress\\(\\\$update); \\\$notify(\\\$onProgress_result);/" $THIRDPARTY_DIR/react/promise/src/Promise.php
+
 echo "Done."
