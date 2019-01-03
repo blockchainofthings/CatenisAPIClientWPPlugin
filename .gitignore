@@ -3,3 +3,7 @@ vendor/
 build/
 thirdparty/
 log/
+.svn/
+svn/trunk/
+svn/tags/
+svn/branches/
