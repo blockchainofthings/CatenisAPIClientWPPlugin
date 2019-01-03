@@ -4,7 +4,8 @@
 Plugin Name: Catenis API Client for WordPress
 Description: Provides a way to use the Catenis Enterprise services from within WordPress
 Version: 1.1.0
-Author: Claudio de Castro
+Author: Blockchain of Things
+Author URI: https://blockchainofthings.com
 License: MIT
 
 Copyright 2019 Blockchain of Things Inc.
