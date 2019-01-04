@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "456154b1a78a42fd3b4df40427d3caba",
+    "content-hash": "f55f7b0222031d21bde517d2151b1c4e",
     "packages": [
         {
             "name": "blockchainofthings/catenis-api-client",
