@@ -14,6 +14,7 @@ class ApiClient {
     private static $heartbeatInterval = 15;     // 15 seconds
 
     private $pluginPath;
+    private $pluginBaseName;
 
     private static function trimArray(&$arr) {
         if (is_array($arr)) {
@@ -124,6 +125,7 @@ class ApiClient {
 
     function __construct($pluginPath) {
         $this->pluginPath = $pluginPath;
+        $this->pluginBaseName = plugin_basename($pluginPath);
 
         register_activation_hook($pluginPath, [$this, 'activate']);
         register_uninstall_hook($pluginPath, ['\Catenis\WP\ApiClient', 'uninstall']);
@@ -132,6 +134,7 @@ class ApiClient {
         add_action('admin_init', [$this, 'adminInitHandler']);
         add_action('admin_menu', [$this, 'adminMenuHandler']);
         add_action('wp_enqueue_scripts', [$this, 'enqueueScriptsHandler']);
+        add_action("in_plugin_update_message-$this->pluginBaseName", [$this, 'showUpgradeNotice'], 10, 2);
 
         // Setup AJAX methods
         add_action('wp_ajax_call_api_method', [$this, 'callApiMethod']);
@@ -153,6 +156,12 @@ class ApiClient {
         //  notification process exists
         if (!file_exists(__DIR__ . '/../io')) {
             mkdir(__DIR__ . '/../io', 0700);
+        }
+    }
+
+    function showUpgradeNotice($plugin_data, $response) {
+        if($plugin_data['update'] && isset($plugin_data['upgrade_notice'])) {
+            echo '<br><b>' . strip_tags($plugin_data['upgrade_notice']) . '</b>';
         }
     }
 
