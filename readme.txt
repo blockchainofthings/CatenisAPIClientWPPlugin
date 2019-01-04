@@ -4,7 +4,7 @@ Tags: Catenis, Catenis Enterprise API, Blockchain of Things, blockchain
 Requires at least: 4.0
 Tested up to: 5.0.2
 Requires PHP: 5.6
-Stable tag: 1.1.0
+Stable tag: 1.1.1
 License: MIT
 
 Provides a way to use the Catenis Enterprise services from within WordPress
@@ -65,6 +65,9 @@ However, when doing it on the "Catenis API Client" meta box on a WordPress page'
 
 == Changelog ==
 
+= 1.1.1 =
+* Fix issue with deleting plugin's data when plugin is uninstalled from multi-site WordPress environments.
+
 = 1.1.0 =
 * Add support for Catenis notifications.
 * **WARNING**: this version only works on Unix-like OS's like Linux and macOS. It does not work on Windows.
@@ -73,6 +76,9 @@ However, when doing it on the "Catenis API Client" meta box on a WordPress page'
 * Initial working version. Exposes all Catenis API methods (as of version 0.6 of the Catenis API), but does not include support for notifications.
 
 == Upgrade Notice ==
+
+= 1.1.1 =
+Upgrade to this version if using the plugin in a multi-site WordPress environment.
 
 = 1.1.0 =
 All users are advised to upgrade to this version even if not planning to use notifications since it also adds several enhancements and fixes to the basic functionality.
