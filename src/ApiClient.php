@@ -83,13 +83,7 @@ class ApiClient {
         return $ctnClientData;
     }
 
-    public static function sanitizeOptions($opts) {
-        self::trimArray($opts);
-
-        return $opts;
-    }
-
-    public static function uninstall() {
+    private static function deletePluginData() {
         // Delete all plugin's meta options
         delete_post_meta_by_key('_ctn_api_client');
 
@@ -99,6 +93,33 @@ class ApiClient {
 
         delete_option('ctn_client_credentials');
         delete_option('ctn_client_options');
+    }
+
+    public static function sanitizeOptions($opts) {
+        self::trimArray($opts);
+
+        return $opts;
+    }
+
+    public static function uninstall() {
+        global $wpdb;
+
+        if (is_multisite()) {
+            // get ids of all sites
+            $blogIds = $wpdb->get_col("SELECT blog_id FROM $wpdb->blogs");
+
+            foreach ($blogIds as $blogId) {
+                switch_to_blog($blogId);
+
+                // Delete plugin's data for this specific site
+                self::deletePluginData();
+
+                restore_current_blog();
+            }
+        }
+        else {
+            self::deletePluginData();
+        }
     }
 
     function __construct($pluginPath) {
