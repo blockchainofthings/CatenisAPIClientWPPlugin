@@ -537,12 +537,20 @@ class ApiClient {
     }
 
     function processHeartbeat($response, $data) {
-        $clientUID = $data['client_uid'];
+        if (!array_key_exists('catenis-api-client_client_uid', $data)) {
+            // No data from Catenis API Client plugin front-end. Just return
+            return $response;
+        }
+
+        $ctn_api_client_response = [];
+        $clientUID = $data['catenis-api-client_client_uid'];
 
         if (!$clientUID) {
             // Return error
-            $response['success'] = false;
-            $response['error'] = 'Missing client UID';
+            $ctn_api_client_response['success'] = false;
+            $ctn_api_client_response['error'] = 'Missing client UID';
+
+            $response['catenis-api-client_response'] = $ctn_api_client_response;
 
             return $response;
         }
@@ -552,8 +560,10 @@ class ApiClient {
         }
         catch (Exception $ex) {
             // Return error
-            $response['success'] = false;
-            $response['error'] = 'Error opening communication pipe: ' . $ex->getMessage();
+            $ctn_api_client_response['success'] = false;
+            $ctn_api_client_response['error'] = 'Error opening communication pipe: ' . $ex->getMessage();
+
+            $response['catenis-api-client_response'] = $ctn_api_client_response;
 
             return $response;
         }
@@ -569,8 +579,10 @@ class ApiClient {
             }
             catch (Exception $ex) {
                 // Return error
-                $response['success'] = false;
-                $response['error'] = 'Error sending ping command: ' . $ex->getMessage();
+                $ctn_api_client_response['success'] = false;
+                $ctn_api_client_response['error'] = 'Error sending ping command: ' . $ex->getMessage();
+
+                $response['catenis-api-client_response'] = $ctn_api_client_response;
 
                 return $response;
             }
@@ -588,26 +600,30 @@ class ApiClient {
             }
             catch (Exception $ex) {
                 // Return error
-                $response['success'] = false;
-                $response['error'] = 'Error while retrieving response from notification process: ' . $ex->getMessage();
+                $ctn_api_client_response['success'] = false;
+                $ctn_api_client_response['error'] = 'Error while retrieving response from notification process: ' . $ex->getMessage();
+
+                $response['catenis-api-client_response'] = $ctn_api_client_response;
 
                 return $response;
             }
 
             // Prepare to return indicating success
-            $response['success'] = true;
+            $ctn_api_client_response['success'] = true;
 
             if (!empty($notifyProcCommands)) {
                 // Add notification process commands to response
-                $response['notifyCommands'] = implode('|', $notifyProcCommands);
+                $ctn_api_client_response['notifyCommands'] = implode('|', $notifyProcCommands);
             }
 
             $commPipe->close();
         }
         else {
             // Notification channel not yet open. Just return indicating success
-            $response['success'] = true;
+            $ctn_api_client_response['success'] = true;
         }
+
+        $response['catenis-api-client_response'] = $ctn_api_client_response;
 
         return $response;
     }

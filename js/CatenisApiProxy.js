@@ -411,24 +411,31 @@
     jQuery(document).ready(function () {
         jQuery(document).on('heartbeat-send', function (event, data) {
             // Send client UID
-            data.client_uid = context.ctn_api_proxy_obj.client_uid;
+            data['catenis-api-client_client_uid'] = context.ctn_api_proxy_obj.client_uid;
         });
 
         jQuery(document).on('heartbeat-tick', function (event, data) {
+            if (!('catenis-api-client_response' in data)) {
+                // No response from Catenis API Client plugin back-end. Just return
+                return;
+            }
+            
+            var ctn_api_client_response = data['catenis-api-client_response'];
+
             // Process returned data
-            if (!('success' in data)) {
-                console.log('Missing required data field from heartbeat response');
+            if (!('success' in ctn_api_client_response)) {
+                console.error('Missing required ctn_api_client_response field from heartbeat response');
                 return;
             }
 
-            if (!data.success) {
+            if (!ctn_api_client_response.success) {
                 // Error heartbeat response. Emit error event from ApiProxy object
-                context.ctnApiProxy.emitEvent('comm_error', [data.error]);
+                context.ctnApiProxy.emitEvent('comm_error', [ctn_api_client_response.error]);
             }
             else {
                 // Success heartbeat response. Look for notification process commands returned
-                if ('notifyCommands' in data) {
-                    data.notifyCommands.split('|').forEach(function (jsonCommand) {
+                if ('notifyCommands' in ctn_api_client_response) {
+                    ctn_api_client_response.notifyCommands.split('|').forEach(function (jsonCommand) {
                         var command = JSON.parse(jsonCommand);
 
                         if (command) {
@@ -460,7 +467,7 @@
         });
 
         jQuery(document).on('heartbeat-error', function(event, jqXHR, textStatus, error) {
-            console.log('Heartbeat error: ' + (error ? error : textStatus));
+            console.error('Heartbeat error: ' + (error ? error : textStatus));
         });
     });
 })(this);
