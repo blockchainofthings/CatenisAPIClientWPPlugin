@@ -9,16 +9,16 @@ fi
 
 PLUGIN_BUILD_ARCHIVE="$SCRIPT_DIR/../build/$1/catenis-api-client.zip"
 
-if [[ ! -f $PLUGIN_BUILD_ARCHIVE ]]; then
+if [[ ! -f "$PLUGIN_BUILD_ARCHIVE" ]]; then
     echo "Plugin build archive for specified version ($1) does not exist"
     exit
 fi
 
 DEPLOY_DIR="$SCRIPT_DIR/../svn/trunk"
 
-if [ ! -z "$(ls -A $DEPLOY_DIR)" ]; then
+if [ ! -z "$(ls -A "$DEPLOY_DIR")" ]; then
    echo "Deploy directory ($DEPLOY_DIR) not empty. Emptying it"
-   rm -r $DEPLOY_DIR/*
+   rm -rf "$DEPLOY_DIR"/*
 fi
 
-unzip $PLUGIN_BUILD_ARCHIVE -d $DEPLOY_DIR
+unzip "$PLUGIN_BUILD_ARCHIVE" -d "$DEPLOY_DIR"
