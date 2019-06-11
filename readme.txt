@@ -4,7 +4,7 @@ Tags: Catenis, Catenis Enterprise API, Blockchain of Things, blockchain
 Requires at least: 4.0
 Tested up to: 5.0.2
 Requires PHP: 5.6
-Stable tag: 1.1.2
+Stable tag: 2.0.0
 License: MIT
 
 Provides a way to use the Catenis Enterprise services from within WordPress
@@ -65,6 +65,10 @@ However, when doing it on the "Catenis API Client" meta box on a WordPress page'
 
 == Changelog ==
 
+= 2.0.0 =
+* Update Catenis API client for PHP to its latest version (2.1.1), which targets version 0.7 of the Catenis Enterprise API.
+* Changes to accommodate changes introduced by the new version of the Catenis API client for PHP, including: a) change in the interface of the Send Message API method; and b) addition of new Retrieve Message Progress API method.
+
 = 1.1.2 =
 * Internal adjustments to usage of WP Heartbeat API.
 
@@ -79,6 +83,9 @@ However, when doing it on the "Catenis API Client" meta box on a WordPress page'
 * Initial working version. Exposes all Catenis API methods (as of version 0.6 of the Catenis API), but does not include support for notifications.
 
 == Upgrade Notice ==
+
+= 2.0.0 =
+Upgrade to this version to take advantage of the new features found in version 0.7 of the Catenis Enterprise API.
 
 = 1.1.2 =
 All users are advised to upgrade to this version.
@@ -102,7 +109,7 @@ ctnApiClient.on('comm-error', function (error) {
 
 ctnApiClient.on('notify-channel-opened', function (eventName, success, error) {
     if (success) {
-        // Underlying WebSocket connection successfully established
+        // Notification channel successfully open
     }
     else {
         // Error establishing underlying WebSocket connection
