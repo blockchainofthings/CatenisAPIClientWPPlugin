@@ -4,20 +4,20 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "b661f8d98fa7ac59d218f5f0c98659a0",
+    "content-hash": "ba097f596ef74249458abb16524aa80b",
     "packages": [
         {
             "name": "blockchainofthings/catenis-api-client",
-            "version": "1.0.3",
+            "version": "2.1.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/blockchainofthings/CatenisAPIClientPHP.git",
-                "reference": "a105872a0411af5c113c677e91a4e36aeb98e8f2"
+                "reference": "e6ac3e3af19d0fb703a155b6d12966af0edb0009"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/blockchainofthings/CatenisAPIClientPHP/zipball/a105872a0411af5c113c677e91a4e36aeb98e8f2",
-                "reference": "a105872a0411af5c113c677e91a4e36aeb98e8f2",
+                "url": "https://api.github.com/repos/blockchainofthings/CatenisAPIClientPHP/zipball/e6ac3e3af19d0fb703a155b6d12966af0edb0009",
+                "reference": "e6ac3e3af19d0fb703a155b6d12966af0edb0009",
                 "shasum": ""
             },
             "require": {
@@ -25,11 +25,14 @@
                 "ext-json": "*",
                 "guzzlehttp/guzzle": "~6.0",
                 "php": ">=5.6.0",
-                "ratchet/pawl": "dev-Fix",
+                "ratchet/pawl": "^0.3.4",
                 "wyrihaximus/react-guzzle-psr7": "^2.1"
             },
             "require-dev": {
-                "react/event-loop": "^1.0"
+                "phpunit/php-invoker": "^2.0",
+                "phpunit/phpunit": "^8",
+                "react/event-loop": "^1.0",
+                "squizlabs/php_codesniffer": "3.*"
             },
             "type": "library",
             "autoload": {
@@ -48,7 +51,7 @@
                 }
             ],
             "description": "Catenis Enterprise API client library for PHP",
-            "time": "2019-01-02T11:20:35+00:00"
+            "time": "2019-06-10T13:50:11+00:00"
         },
         {
             "name": "clue/buzz-react",
@@ -540,16 +543,16 @@
         },
         {
             "name": "ratchet/pawl",
-            "version": "dev-Fix",
+            "version": "v0.3.4",
             "source": {
                 "type": "git",
-                "url": "https://github.com/claudiosdc/Pawl.git",
-                "reference": "00a49ef612aa62d186f16429353edd1eae6583f9"
+                "url": "https://github.com/ratchetphp/Pawl.git",
+                "reference": "3a7d5b78e0deaec82f42513a4a3193a8eb12feb1"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/claudiosdc/Pawl/zipball/00a49ef612aa62d186f16429353edd1eae6583f9",
-                "reference": "00a49ef612aa62d186f16429353edd1eae6583f9",
+                "url": "https://api.github.com/repos/ratchetphp/Pawl/zipball/3a7d5b78e0deaec82f42513a4a3193a8eb12feb1",
+                "reference": "3a7d5b78e0deaec82f42513a4a3193a8eb12feb1",
                 "shasum": ""
             },
             "require": {
@@ -573,21 +576,19 @@
                     "src/functions_include.php"
                 ]
             },
+            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "MIT"
             ],
             "description": "Asynchronous WebSocket client",
             "keywords": [
                 "Ratchet",
-                "WebSocket",
                 "async",
                 "client",
+                "websocket",
                 "websocket client"
             ],
-            "support": {
-                "source": "https://github.com/claudiosdc/Pawl/tree/Fix"
-            },
-            "time": "2018-12-31T14:44:01+00:00"
+            "time": "2019-01-14T14:09:36+00:00"
         },
         {
             "name": "ratchet/rfc6455",
@@ -1260,9 +1261,7 @@
     "packages-dev": [],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {
-        "ratchet/pawl": 20
-    },
+    "stability-flags": [],
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {

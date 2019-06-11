@@ -215,15 +215,9 @@ class NotificationCtrl
             // Open notification channel
             $wsNotifyChannel->open()->then(function () use ($eventName, $wsNotifyChannel) {
                 self::logDebug('Process open notification channel: open channel succeeded');
-                // Notification channel successfully opened. Save its reference...
+                // Underlying WebSocket connection successfully open. Save notification channel reference,
+                //  and wait for 'open' event indicating that notification channel is successfully open
                 $this->wsNofifyChannels[$eventName] = $wsNotifyChannel;
-
-                try {
-                    // ... and send command notifying that notification channel was successfully opened
-                    $this->commCommand->sendNotifyChannelOpenedCommand($eventName);
-                } catch (Exception $ex) {
-                    self::logError('Error sending notification channel opened (success) command: ' . $ex->getMessage());
-                }
             }, function (Exception $ex) use ($eventName, $wsNotifyChannel) {
                 self::logDebug('Process open notification channel: open channel failed');
                 if ($ex instanceof WsNotifyChannelAlreadyOpenException) {
@@ -279,6 +273,16 @@ class NotificationCtrl
                 $this->commCommand->sendNotifyChannelClosedCommand($eventName, $code, $reason);
             } catch (Exception $ex) {
                 self::logError('Error sending notification channel closed command: ' . $ex->getMessage());
+            }
+        });
+
+        $wsNotifyChannel->on('open', function () use ($eventName) {
+            self::logTrace('Notification channel open');
+            try {
+                // Send command notifying that notification channel is successfully open
+                $this->commCommand->sendNotifyChannelOpenedCommand($eventName);
+            } catch (Exception $ex) {
+                self::logError('Error sending notification channel opened command: ' . $ex->getMessage());
             }
         });
 

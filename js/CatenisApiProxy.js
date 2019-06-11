@@ -22,15 +22,15 @@
         callApiMethod('logMessage', params, callback);
     };
 
-    ApiProxy.prototype.sendMessage = function (targetDevice, message, options, callback) {
+    ApiProxy.prototype.sendMessage = function (message, targetDevice, options, callback) {
         if (typeof options === 'function') {
             callback = options;
             options = undefined;
         }
 
         var params = [
-            targetDevice,
-            message
+            message,
+            targetDevice
         ];
 
         if (options) {
@@ -63,6 +63,14 @@
         ];
 
         callApiMethod('retrieveMessageContainer', params, callback);
+    };
+
+    ApiProxy.prototype.retrieveMessageProgress = function (messageId, callback) {
+        var params = [
+            messageId
+        ];
+
+        callApiMethod('retrieveMessageProgress', params, callback);
     };
 
     ApiProxy.prototype.listMessages = function (options, callback) {
