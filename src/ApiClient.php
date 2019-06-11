@@ -9,14 +9,15 @@ use Catenis\WP\Notification\NotificationCtrl;
 use Catenis\WP\Notification\CommPipe;
 use Catenis\WP\Notification\CommCommand;
 
-
-class ApiClient {
+class ApiClient
+{
     private static $heartbeatInterval = 15;     // 15 seconds
 
     private $pluginPath;
     private $pluginBaseName;
 
-    private static function trimArray(&$arr) {
+    private static function trimArray(&$arr)
+    {
         if (is_array($arr)) {
             foreach ($arr as $idx => $value) {
                 if (is_array($value)) {
@@ -25,8 +26,7 @@ class ApiClient {
                     if (!count($value)) {
                         unset($arr[$idx]);
                     }
-                }
-                else {
+                } else {
                     $arr[$idx] = trim($value);
 
                     if ($arr[$idx] == '') {
@@ -36,12 +36,13 @@ class ApiClient {
             }
 
             if (!count($arr)) {
-                $arr = NULL;
+                $arr = null;
             }
         }
     }
 
-    private static function getCtnClientData($postID) {
+    private static function getCtnClientData($postID)
+    {
         if (empty($postID) || empty($postMetadata = get_post_meta($postID, '_ctn_api_client', true))) {
             return false;
         }
@@ -50,32 +51,31 @@ class ApiClient {
         $globalCtnClientCredentials = get_option('ctn_client_credentials');
         $ctnClientData = new stdClass();
         $ctnClientData->ctnClientCredentials = new stdClass();
-        $ctnClientData->ctnClientCredentials->deviceId = !empty($postMetadata['ctn_device_id']) ? $postMetadata['ctn_device_id']
-            : (!empty($globalCtnClientCredentials['ctn_device_id']) ? $globalCtnClientCredentials['ctn_device_id'] : '');
-        $ctnClientData->ctnClientCredentials->apiAccessSecret = !empty($postMetadata['ctn_api_access_secret']) ? $postMetadata['ctn_api_access_secret']
-            : (!empty($globalCtnClientCredentials['ctn_api_access_secret']) ? $globalCtnClientCredentials['ctn_api_access_secret'] : '');
+        $ctnClientData->ctnClientCredentials->deviceId = !empty($postMetadata['ctn_device_id'])
+            ? $postMetadata['ctn_device_id'] : (!empty($globalCtnClientCredentials['ctn_device_id'])
+            ? $globalCtnClientCredentials['ctn_device_id'] : '');
+        $ctnClientData->ctnClientCredentials->apiAccessSecret = !empty($postMetadata['ctn_api_access_secret'])
+            ? $postMetadata['ctn_api_access_secret'] : (!empty($globalCtnClientCredentials['ctn_api_access_secret'])
+            ? $globalCtnClientCredentials['ctn_api_access_secret'] : '');
 
         $globalCtnClientOptions = get_option('ctn_client_options');
         $options = [];
 
         if (!empty($postMetadata['ctn_host'])) {
             $options['host'] = $postMetadata['ctn_host'];
-        }
-        elseif (!empty($globalCtnClientOptions['ctn_host'])) {
+        } elseif (!empty($globalCtnClientOptions['ctn_host'])) {
             $options['host'] = $globalCtnClientOptions['ctn_host'];
         }
 
         if (!empty($postMetadata['ctn_environment'])) {
             $options['environment'] = $postMetadata['ctn_environment'];
-        }
-        elseif (!empty($globalCtnClientOptions['ctn_environment'])) {
+        } elseif (!empty($globalCtnClientOptions['ctn_environment'])) {
             $options['environment'] = $globalCtnClientOptions['ctn_environment'];
         }
 
         if (!empty($postMetadata['ctn_secure'])) {
             $options['secure'] = $postMetadata['ctn_secure'] === 'on';
-        }
-        elseif (!empty($globalCtnClientOptions['ctn_secure'])) {
+        } elseif (!empty($globalCtnClientOptions['ctn_secure'])) {
             $options['secure'] = $globalCtnClientOptions['ctn_secure'] === 'on';
         }
 
@@ -84,25 +84,28 @@ class ApiClient {
         return $ctnClientData;
     }
 
-    private static function deletePluginData() {
+    private static function deletePluginData()
+    {
         // Delete all plugin's meta options
         delete_post_meta_by_key('_ctn_api_client');
 
         // Remove plugin's options
-        unregister_setting( 'ctn_api_client_opts', 'ctn_client_credentials');
-        unregister_setting( 'ctn_api_client_opts', 'ctn_client_options');
+        unregister_setting('ctn_api_client_opts', 'ctn_client_credentials');
+        unregister_setting('ctn_api_client_opts', 'ctn_client_options');
 
         delete_option('ctn_client_credentials');
         delete_option('ctn_client_options');
     }
 
-    public static function sanitizeOptions($opts) {
+    public static function sanitizeOptions($opts)
+    {
         self::trimArray($opts);
 
         return $opts;
     }
 
-    public static function uninstall() {
+    public static function uninstall()
+    {
         global $wpdb;
 
         if (is_multisite()) {
@@ -117,13 +120,13 @@ class ApiClient {
 
                 restore_current_blog();
             }
-        }
-        else {
+        } else {
             self::deletePluginData();
         }
     }
 
-    function __construct($pluginPath) {
+    public function __construct($pluginPath)
+    {
         $this->pluginPath = $pluginPath;
         $this->pluginBaseName = plugin_basename($pluginPath);
 
@@ -140,7 +143,7 @@ class ApiClient {
         add_action('wp_ajax_call_api_method', [$this, 'callApiMethod']);
         add_action('wp_ajax_open_notify_channel', [$this, 'openNotifyChannel']);
         add_action('wp_ajax_close_notify_channel', [$this, 'closeNotifyChannel']);
-        // Note: the following is required so non-logged-in users can execute the ajax call
+        // Note: the following is required so non-logged-in users can execute the Ajax call
         add_action('wp_ajax_nopriv_call_api_method', [$this, 'callApiMethod']);
         add_action('wp_ajax_nopriv_open_notify_channel', [$this, 'openNotifyChannel']);
         add_action('wp_ajax_nopriv_close_notify_channel', [$this, 'closeNotifyChannel']);
@@ -151,7 +154,8 @@ class ApiClient {
         add_filter('heartbeat_nopriv_received', [$this, 'processHeartbeat'], 10, 2);
     }
 
-    function activate() {
+    public function activate()
+    {
         // Make sure that directory used to hold fifos for communication with
         //  notification process exists
         if (!file_exists(__DIR__ . '/../io')) {
@@ -159,13 +163,15 @@ class ApiClient {
         }
     }
 
-    function showUpgradeNotice($plugin_data, $response) {
-        if($plugin_data['update'] && isset($plugin_data['upgrade_notice'])) {
+    public function showUpgradeNotice($plugin_data, $response)
+    {
+        if ($plugin_data['update'] && isset($plugin_data['upgrade_notice'])) {
             echo '<br><b>' . strip_tags($plugin_data['upgrade_notice']) . '</b>';
         }
     }
 
-    function enqueueScriptsHandler() {
+    public function enqueueScriptsHandler()
+    {
         global $post;
 
         if ($post->post_type === 'page') {
@@ -177,20 +183,22 @@ class ApiClient {
                 wp_register_script('heir', plugins_url('/js/lib/heir.js', $this->pluginPath));
                 wp_register_script('event_emitter', plugins_url('/js/lib/EventEmitter.min.js', $this->pluginPath));
 
-                wp_enqueue_script('ctn_api_proxy',
+                wp_enqueue_script(
+                    'ctn_api_proxy',
                     plugins_url('/js/CatenisApiProxy.js', $this->pluginPath),
                     ['jquery', 'heir', 'event_emitter']
                 );
 
                 try {
                     $clientUID = random_int(1, 9999999999);
-                }
-                catch (Exception $ex) {
+                } catch (Exception $ex) {
                     $clientUID = rand(1, 9999999999);
                 }
 
-                wp_localize_script('ctn_api_proxy',
-                    'ctn_api_proxy_obj', [
+                wp_localize_script(
+                    'ctn_api_proxy',
+                    'ctn_api_proxy_obj',
+                    [
                         'ajax_url' => admin_url('admin-ajax.php'),
                         'nonce' => wp_create_nonce(__FILE__),
                         'post_id' => $post->ID,
@@ -204,135 +212,199 @@ class ApiClient {
         }
     }
 
-    function adminInitHandler() {
+    public function adminInitHandler()
+    {
         // Set up Catenis API client options
-        register_setting( 'ctn_api_client_opts', 'ctn_client_credentials', ['sanitize_callback' => ['\Catenis\WP\ApiClient', 'sanitizeOptions']]);
-        register_setting( 'ctn_api_client_opts', 'ctn_client_options', ['sanitize_callback' => ['\Catenis\WP\ApiClient', 'sanitizeOptions']]);
+        register_setting(
+            'ctn_api_client_opts',
+            'ctn_client_credentials',
+            ['sanitize_callback' => ['\Catenis\WP\ApiClient', 'sanitizeOptions']]
+        );
+        register_setting(
+            'ctn_api_client_opts',
+            'ctn_client_options',
+            ['sanitize_callback' => ['\Catenis\WP\ApiClient', 'sanitizeOptions']]
+        );
 
-        add_settings_section('ctn_client_credentials', 'Client Credentials', [$this, 'displayClientCredentialsSectionInfo'],
+        add_settings_section(
+            'ctn_client_credentials',
+            'Client Credentials',
+            [$this, 'displayClientCredentialsSectionInfo'],
             'ctn_api_client_opts'
         );
-        add_settings_section('ctn_client_options', 'Client Options', [$this, 'displayClientOptionsSectionInfo'],
+        add_settings_section(
+            'ctn_client_options',
+            'Client Options',
+            [$this, 'displayClientOptionsSectionInfo'],
             'ctn_api_client_opts'
         );
 
         // Client credentials fields
-        add_settings_field('ctn_device_id', 'Device ID', [$this, 'displayDeviceIdFieldContents'],
-            'ctn_api_client_opts', 'ctn_client_credentials', [
-            'label_for' => 'ctn_device_id'
-        ]);
-        add_settings_field('ctn_api_access_secret', 'API Access Secret', [$this, 'displayApiAccessSecretFieldContents'],
-            'ctn_api_client_opts', 'ctn_client_credentials', [
-            'label_for' => 'ctn_api_access_secret'
-        ]);
+        add_settings_field(
+            'ctn_device_id',
+            'Device ID',
+            [$this, 'displayDeviceIdFieldContents'],
+            'ctn_api_client_opts',
+            'ctn_client_credentials',
+            ['label_for' => 'ctn_device_id']
+        );
+        add_settings_field(
+            'ctn_api_access_secret',
+            'API Access Secret',
+            [$this, 'displayApiAccessSecretFieldContents'],
+            'ctn_api_client_opts',
+            'ctn_client_credentials',
+            ['label_for' => 'ctn_api_access_secret']
+        );
 
         // Client options fields
-        add_settings_field('ctn_host', 'Host', [$this, 'displayHostFieldContents'],
-            'ctn_api_client_opts', 'ctn_client_options', [
-            'label_for' => 'ctn_host'
-        ]);
-        add_settings_field('ctn_environment', 'Environment', [$this, 'displayEnvironmentFieldContents'],
-            'ctn_api_client_opts', 'ctn_client_options', [
-            'label_for' => 'ctn_environment'
-        ]);
-        add_settings_field('ctn_secure', 'Secure Connection', [$this, 'displaySecureConnectionFieldContents'],
-            'ctn_api_client_opts', 'ctn_client_options', [
-            'label_for' => 'ctn_secure'
-        ]);
+        add_settings_field(
+            'ctn_host',
+            'Host',
+            [$this, 'displayHostFieldContents'],
+            'ctn_api_client_opts',
+            'ctn_client_options',
+            ['label_for' => 'ctn_host']
+        );
+        add_settings_field(
+            'ctn_environment',
+            'Environment',
+            [$this, 'displayEnvironmentFieldContents'],
+            'ctn_api_client_opts',
+            'ctn_client_options',
+            ['label_for' => 'ctn_environment']
+        );
+        add_settings_field(
+            'ctn_secure',
+            'Secure Connection',
+            [$this, 'displaySecureConnectionFieldContents'],
+            'ctn_api_client_opts',
+            'ctn_client_options',
+            ['label_for' => 'ctn_secure']
+        );
 
         // Add Catenis API client config panel to pages (post type = 'page')
-        add_meta_box('ctn_api_client_meta', 'Catenis API Client', [$this, 'displayPostMetadataFormContents'], 'page', 'normal', 'high');
+        add_meta_box(
+            'ctn_api_client_meta',
+            'Catenis API Client',
+            [$this, 'displayPostMetadataFormContents'],
+            'page',
+            'normal',
+            'high'
+        );
 
         // Wire up action handler to save post metadata
         add_action('save_post', [$this, 'savePostMetadata']);
     }
 
-    function adminMenuHandler() {
-        add_options_page('Catenis API Client', 'Catenis API Client', 'manage_options',
-            'ctn_api_client_opts', [$this, 'displayOptionsPage']
+    public function adminMenuHandler()
+    {
+        add_options_page(
+            'Catenis API Client',
+            'Catenis API Client',
+            'manage_options',
+            'ctn_api_client_opts',
+            [$this, 'displayOptionsPage']
         );
     }
 
-    function displayOptionsPage() {
+    public function displayOptionsPage()
+    {
         // check user capabilities
-        if ( ! current_user_can( 'manage_options' ) ) {
+        if (!current_user_can('manage_options')) {
             return;
         }
-?>
+        ?>
 <div class="wrap">
     <h1><?php echo esc_html(get_admin_page_title()); ?></h1>
     <form action="options.php" method="post">
-<?php
+        <?php
         // output security fields for the registered setting "ctn_api_client_opts"
-        settings_fields( 'ctn_api_client_opts' );
+        settings_fields('ctn_api_client_opts');
         // output setting sections and their fields
-        do_settings_sections( 'ctn_api_client_opts' );
+        do_settings_sections('ctn_api_client_opts');
         // output save settings button
-        submit_button( 'Save Settings' );
-?>
+        submit_button('Save Settings');
+        ?>
     </form>
 </div>
-<?php
+        <?php
     }
 
-    function displayClientCredentialsSectionInfo() {
+    public function displayClientCredentialsSectionInfo()
+    {
         echo '<p>Enter credentials for the Catenis device to use with the Catenis API client</p>';
     }
 
-    function displayClientOptionsSectionInfo() {
-        echo '<p>Enter the options for instantiating the Catenis API client<br><span style="color:gray">(leave blank for default settings)</span></p>';
+    public function displayClientOptionsSectionInfo()
+    {
+        echo '<p>Enter the options for instantiating the Catenis API client<br><span style="color:gray">(leave blank'
+            . ' for default settings)</span></p>';
     }
 
-    function displayDeviceIdFieldContents($args) {
+    public function displayDeviceIdFieldContents($args)
+    {
         $ctnClientCredentials = get_option('ctn_client_credentials');
-?>
-<input type="text" id="<?php echo $args['label_for'] ?>" name="ctn_client_credentials[<?php echo $args['label_for'] ?>]" class="regular-text" maxlength="20" autocomplete="off"
-       <?php echo !empty($ctnClientCredentials[$args['label_for']]) ? 'value="' . esc_attr($ctnClientCredentials[$args['label_for']]) . '"' : '' ?>>
-<?php
+        ?>
+<input type="text" id="<?php echo $args['label_for'] ?>" name="ctn_client_credentials[<?php echo $args['label_for'] ?>]"
+    class="regular-text" maxlength="20" autocomplete="off" <?php echo !empty($ctnClientCredentials[$args['label_for']])
+        ? 'value="' . esc_attr($ctnClientCredentials[$args['label_for']]) . '"' : '' ?>>
+        <?php
     }
 
-    function displayApiAccessSecretFieldContents($args) {
+    public function displayApiAccessSecretFieldContents($args)
+    {
         $ctnClientCredentials = get_option('ctn_client_credentials');
-?>
-<input type="text" id="<?php echo $args['label_for'] ?>" name="ctn_client_credentials[<?php echo $args['label_for'] ?>]" class="regular-text" maxlength="128" autocomplete="off"
-       <?php echo !empty($ctnClientCredentials[$args['label_for']]) ? 'value="' . esc_attr($ctnClientCredentials[$args['label_for']]) . '"' : '' ?>>
-<?php
+        ?>
+<input type="text" id="<?php echo $args['label_for'] ?>" name="ctn_client_credentials[<?php echo $args['label_for'] ?>]"
+    class="regular-text" maxlength="128" autocomplete="off" <?php echo !empty($ctnClientCredentials[$args['label_for']])
+        ? 'value="' . esc_attr($ctnClientCredentials[$args['label_for']]) . '"' : '' ?>>
+        <?php
     }
 
-    function displayHostFieldContents($args) {
+    public function displayHostFieldContents($args)
+    {
         $ctnClientOptions = get_option('ctn_client_options');
-?>
-<input type="text" id="<?php echo $args['label_for'] ?>" name="ctn_client_options[<?php echo $args['label_for'] ?>]" class="regular-text" maxlength="80" autocomplete="off"
-    <?php echo !empty($ctnClientOptions[$args['label_for']]) ? 'value="' . esc_attr($ctnClientOptions[$args['label_for']]) . '"' : '' ?>>
-<?php
+        ?>
+<input type="text" id="<?php echo $args['label_for'] ?>" name="ctn_client_options[<?php echo $args['label_for'] ?>]"
+    class="regular-text" maxlength="80" autocomplete="off" <?php echo !empty($ctnClientOptions[$args['label_for']])
+        ? 'value="' . esc_attr($ctnClientOptions[$args['label_for']]) . '"' : '' ?>>
+        <?php
     }
 
-    function displayEnvironmentFieldContents($args) {
+    public function displayEnvironmentFieldContents($args)
+    {
         $ctnClientOptions = get_option('ctn_client_options');
-?>
+        ?>
 <select id="<?php echo $args['label_for'] ?>" name="ctn_client_options[<?php echo $args['label_for'] ?>]">
     <option value=""></option>
-    <option value="prod" <?php echo !empty($ctnClientOptions[$args['label_for']]) ? selected($ctnClientOptions[$args['label_for']], 'prod', false) : ''; ?>>Production</option>
-    <option value="sandbox" <?php echo !empty($ctnClientOptions[$args['label_for']]) ? selected($ctnClientOptions[$args['label_for']], 'sandbox', false) : ''; ?>>Sandbox</option>
+    <option value="prod" <?php echo !empty($ctnClientOptions[$args['label_for']])
+        ? selected($ctnClientOptions[$args['label_for']], 'prod', false) : ''; ?>>Production</option>
+    <option value="sandbox" <?php echo !empty($ctnClientOptions[$args['label_for']])
+        ? selected($ctnClientOptions[$args['label_for']], 'sandbox', false) : ''; ?>>Sandbox</option>
 </select>
-<?php
+        <?php
     }
 
-    function displaySecureConnectionFieldContents($args) {
+    public function displaySecureConnectionFieldContents($args)
+    {
         $ctnClientOptions = get_option('ctn_client_options');
-?>
+        ?>
 <select id="<?php echo $args['label_for'] ?>" name="ctn_client_options[<?php echo $args['label_for'] ?>]">
     <option value=""></option>
-    <option value="on" <?php echo !empty($ctnClientOptions[$args['label_for']]) ? selected($ctnClientOptions[$args['label_for']], 'on', false) : ''; ?>>On</option>
-    <option value="off" <?php echo !empty($ctnClientOptions[$args['label_for']]) ? selected($ctnClientOptions[$args['label_for']], 'off', false) : ''; ?>>Off</option>
+    <option value="on" <?php echo !empty($ctnClientOptions[$args['label_for']])
+        ? selected($ctnClientOptions[$args['label_for']], 'on', false) : ''; ?>>On</option>
+    <option value="off" <?php echo !empty($ctnClientOptions[$args['label_for']])
+        ? selected($ctnClientOptions[$args['label_for']], 'off', false) : ''; ?>>Off</option>
 </select>
-<?php
+        <?php
     }
 
-    function displayPostMetadataFormContents() {
+    public function displayPostMetadataFormContents()
+    {
         global $post;
 
-        $postMetadata = get_post_meta($post->ID,'_ctn_api_client',true);
+        $postMetadata = get_post_meta($post->ID, '_ctn_api_client', true);
 
         // Include post metadata form contents
         include_once __DIR__ . '/../inc/PostMetadataFormContents.php';
@@ -341,9 +413,11 @@ class ApiClient {
         echo '<input type="hidden" name="catenis_api_client_nonce" value="' . wp_create_nonce(__FILE__) . '" />';
     }
 
-    function savePostMetadata($post_id) {
+    public function savePostMetadata($post_id)
+    {
         // Make sure data came from our post metadata form
-        if (! isset($_POST['catenis_api_client_nonce']) || !wp_verify_nonce($_POST['catenis_api_client_nonce'],__FILE__)) {
+        if (! isset($_POST['catenis_api_client_nonce'])
+                || !wp_verify_nonce($_POST['catenis_api_client_nonce'], __FILE__)) {
             return $post_id;
         }
         
@@ -352,7 +426,7 @@ class ApiClient {
             if (!current_user_can('edit_page', $post_id)) {
                 return $post_id;
             }
-        } else if (!current_user_can('edit_post', $post_id)) {
+        } elseif (!current_user_can('edit_post', $post_id)) {
             return $post_id;
         }
 
@@ -363,20 +437,19 @@ class ApiClient {
 
         if ($currPostMetadata) {
             if (is_null($newPostMetadata)) {
-                delete_post_meta($post_id,'_ctn_api_client');
+                delete_post_meta($post_id, '_ctn_api_client');
+            } else {
+                update_post_meta($post_id, '_ctn_api_client', $newPostMetadata);
             }
-            else {
-                update_post_meta($post_id,'_ctn_api_client', $newPostMetadata);
-            }
-        }
-        else if (!is_null($newPostMetadata)) {
-            add_post_meta($post_id,'_ctn_api_client', $newPostMetadata,true);
+        } elseif (!is_null($newPostMetadata)) {
+            add_post_meta($post_id, '_ctn_api_client', $newPostMetadata, true);
         }
 
         return $post_id;
     }
 
-    function callApiMethod() {
+    public function callApiMethod()
+    {
         check_ajax_referer(__FILE__);
 
         $postID = $_POST['post_id'];
@@ -388,12 +461,12 @@ class ApiClient {
 
         try {
             // Instantiate Catenis API client
-            $ctnApiClient = new CatenisApiClient($ctnClientData->ctnClientCredentials->deviceId,
+            $ctnApiClient = new CatenisApiClient(
+                $ctnClientData->ctnClientCredentials->deviceId,
                 $ctnClientData->ctnClientCredentials->apiAccessSecret,
                 $ctnClientData->ctnClientOptions
             );
-        }
-        catch (Exception $ex) {
+        } catch (Exception $ex) {
             wp_send_json_error('Error instantiating Catenis API client: ' . $ex->getMessage(), 500);
             return;
         }
@@ -412,7 +485,8 @@ class ApiClient {
         }
     }
 
-    function openNotifyChannel() {
+    public function openNotifyChannel()
+    {
         check_ajax_referer(__FILE__);
 
         $clientUID = $_POST['client_uid'];
@@ -423,8 +497,7 @@ class ApiClient {
 
         try {
             $commPipe = new CommPipe($clientUID, true, CommPipe::SEND_COMM_MODE | CommPipe::RECEIVE_COMM_MODE, true);
-        }
-        catch (Exception $ex) {
+        } catch (Exception $ex) {
             wp_send_json_error('Error opening communication pipe: ' . $ex->getMessage(), 500);
         }
 
@@ -445,8 +518,7 @@ class ApiClient {
 
             try {
                 $commCommand->sendInitCommand($ctnClientData);
-            }
-            catch (Exception $ex) {
+            } catch (Exception $ex) {
                 $commPipe->delete();
                 wp_send_json_error('Error sending init command: ' . $ex->getMessage(), 500);
             }
@@ -460,16 +532,13 @@ class ApiClient {
 
                     if (($commandType = CommCommand::commandType($command)) !== CommCommand::INIT_RESPONSE_CMD) {
                         $errorMsg = 'Unexpected response from notification process: ' . $commandType;
-                    }
-                    elseif (!$command->data->success) {
+                    } elseif (!$command->data->success) {
                         $errorMsg = $command->data->error;
                     }
-                }
-                else {
+                } else {
                     $errorMsg = 'No response from notification process';
                 }
-            }
-            catch (Exception $ex) {
+            } catch (Exception $ex) {
                 $errorMsg = 'Error while retrieving response from notification process: ' . $ex->getMessage();
             }
 
@@ -485,8 +554,7 @@ class ApiClient {
 
         try {
             $commCommand->sendOpenNotifyChannelCommand($eventName);
-        }
-        catch (Exception $ex) {
+        } catch (Exception $ex) {
             wp_send_json_error('Error sending open notification channel command: ' . $ex->getMessage(), 500);
         }
 
@@ -494,7 +562,8 @@ class ApiClient {
         wp_send_json_success();
     }
 
-    function closeNotifyChannel() {
+    public function closeNotifyChannel()
+    {
         check_ajax_referer(__FILE__);
 
         $clientUID = $_POST['client_uid'];
@@ -505,8 +574,7 @@ class ApiClient {
 
         try {
             $commPipe = new CommPipe($clientUID, true, CommPipe::SEND_COMM_MODE);
-        }
-        catch (Exception $ex) {
+        } catch (Exception $ex) {
             wp_send_json_error('Error opening communication pipe: ' . $ex->getMessage(), 500);
         }
 
@@ -520,8 +588,7 @@ class ApiClient {
 
             try {
                 $commCommand->sendCloseNotifyChannelCommand($eventName);
-            }
-            catch (Exception $ex) {
+            } catch (Exception $ex) {
                 wp_send_json_error('Error sending close notification channel command: ' . $ex->getMessage(), 500);
             }
 
@@ -531,12 +598,14 @@ class ApiClient {
         wp_send_json_success();
     }
 
-    function setHeartbeatInterval($settings) {
+    public function setHeartbeatInterval($settings)
+    {
         $settings['interval'] = self::$heartbeatInterval;
         return $settings;
     }
 
-    function processHeartbeat($response, $data) {
+    public function processHeartbeat($response, $data)
+    {
         if (!array_key_exists('catenis-api-client_client_uid', $data)) {
             // No data from Catenis API Client plugin front-end. Just return
             return $response;
@@ -557,8 +626,7 @@ class ApiClient {
 
         try {
             $commPipe = new CommPipe($clientUID, true);
-        }
-        catch (Exception $ex) {
+        } catch (Exception $ex) {
             // Return error
             $ctn_api_client_response['success'] = false;
             $ctn_api_client_response['error'] = 'Error opening communication pipe: ' . $ex->getMessage();
@@ -576,8 +644,7 @@ class ApiClient {
             // Send ping command
             try {
                 $commCommand->sendPingCommand();
-            }
-            catch (Exception $ex) {
+            } catch (Exception $ex) {
                 // Return error
                 $ctn_api_client_response['success'] = false;
                 $ctn_api_client_response['error'] = 'Error sending ping command: ' . $ex->getMessage();
@@ -594,14 +661,13 @@ class ApiClient {
                 if ($commCommand->receive()) {
                     do {
                         $notifyProcCommands[]= json_encode($commCommand->getNextCommand());
-                    }
-                    while ($commCommand->hasReceivedCommand());
+                    } while ($commCommand->hasReceivedCommand());
                 }
-            }
-            catch (Exception $ex) {
+            } catch (Exception $ex) {
                 // Return error
                 $ctn_api_client_response['success'] = false;
-                $ctn_api_client_response['error'] = 'Error while retrieving response from notification process: ' . $ex->getMessage();
+                $ctn_api_client_response['error'] = 'Error while retrieving response from notification process: '
+                    . $ex->getMessage();
 
                 $response['catenis-api-client_response'] = $ctn_api_client_response;
 
@@ -617,8 +683,7 @@ class ApiClient {
             }
 
             $commPipe->close();
-        }
-        else {
+        } else {
             // Notification channel not yet open. Just return indicating success
             $ctn_api_client_response['success'] = true;
         }

@@ -51,8 +51,7 @@ $loop = Factory::create();
 
 try {
     new NotificationCtrl($argv[1], $loop);
-}
-catch (Exception $ex) {
+} catch (Exception $ex) {
     NotificationCtrl::logError('Error instantiating notification control object: ' . $ex->getMessage());
     exit(-2);
 }

@@ -25,5 +25,4 @@ require_once __DIR__ . '/thirdparty/autoload.php';
 
 use Catenis\WP\ApiClient;
 
-
 new ApiClient(__FILE__);

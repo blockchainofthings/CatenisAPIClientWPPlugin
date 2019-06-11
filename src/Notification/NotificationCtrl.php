@@ -12,8 +12,8 @@ use Catenis\WP\React\Stream\ReadableResourceStream;
 use Catenis\WP\Catenis\ApiClient as CatenisApiClient;
 use Catenis\WP\Catenis\Exception\WsNotifyChannelAlreadyOpenException;
 
-
-class NotificationCtrl {
+class NotificationCtrl
+{
     private $clientUID;
     private $eventLoop;
     private $commPipe;
@@ -33,31 +33,38 @@ class NotificationCtrl {
         'ALL' => 100
     ];
 
-    public static function execProcess($clientUID) {
+    public static function execProcess($clientUID)
+    {
         return exec('php ' . __DIR__ . '/catenis_notify_proc.php ' . $clientUID . ' > /dev/null &');
     }
 
-    public static function logError($message) {
+    public static function logError($message)
+    {
         self::logMessage('ERROR', $message);
     }
 
-    public static function logWarn($message) {
+    public static function logWarn($message)
+    {
         self::logMessage('WARN', $message);
     }
 
-    public static function logInfo($message) {
+    public static function logInfo($message)
+    {
         self::logMessage('INFO', $message);
     }
 
-    public static function logDebug($message) {
+    public static function logDebug($message)
+    {
         self::logMessage('DEBUG', $message);
     }
 
-    public static function logTrace($message) {
+    public static function logTrace($message)
+    {
         self::logMessage('TRACE', $message);
     }
 
-    private static function logMessage($level, $message) {
+    private static function logMessage($level, $message)
+    {
         global $LOGGING, $LOG_LEVEL, $LOG;
         static $pid;
 
@@ -67,28 +74,41 @@ class NotificationCtrl {
             }
 
             try {
-                fwrite($LOG, sprintf("%s - %-5s [%d]: %s\n", (new DateTime())->format('Y-m-d\Th:i:s.u\Z'), $level, $pid, $message));
+                fwrite(
+                    $LOG,
+                    sprintf(
+                        "%s - %-5s [%d]: %s\n",
+                        (new DateTime())->format('Y-m-d\Th:i:s.u\Z'),
+                        $level,
+                        $pid,
+                        $message
+                    )
+                );
                 fflush($LOG);
             } catch (Exception $ex) {
             }
         }
     }
 
-    private function setParentAlive() {
+    private function setParentAlive()
+    {
         $this->isParentAlive = true;
     }
 
-    private function resetParentAlive() {
+    private function resetParentAlive()
+    {
         $this->isParentAlive = false;
     }
 
-    private function processParentDeath() {
+    private function processParentDeath()
+    {
         // Parent process (WordPress page using Catenis API client) has stopped responded.
         //  Just terminate process
         $this->terminate('Parent process stopped responding');
     }
 
-    private function terminate($reason = '', $exitCode = 0) {
+    private function terminate($reason = '', $exitCode = 0)
+    {
         global $EXIT_CODE;
 
         // Stop event loop and delete communication pipes before terminating process
@@ -102,8 +122,7 @@ class NotificationCtrl {
         if (!empty($reason)) {
             if ($exitCode !== 0) {
                 self::logError('Terminated: ' . $reason);
-            }
-            else {
+            } else {
                 self::logInfo('Terminated: ' . $reason);
             }
         }
@@ -111,7 +130,8 @@ class NotificationCtrl {
         $EXIT_CODE = $exitCode;
     }
 
-    private function processCommands() {
+    private function processCommands()
+    {
         while ($this->commCommand->hasReceivedCommand()) {
             $command = $this->commCommand->getNextCommand();
             self::logDebug('Process command: ' . print_r($command, true));
@@ -139,29 +159,29 @@ class NotificationCtrl {
         }
     }
 
-    private function processInitCommand($command) {
+    private function processInitCommand($command)
+    {
         $errorMsg = '';
         $terminate = false;
 
         if (!isset($this->ctnApiClient)) {
             try {
                 // Convert client options from stdClass object to array
-                $ctnClientOptions = json_decode(json_encode($command->data->ctnClientOptions),true);
+                $ctnClientOptions = json_decode(json_encode($command->data->ctnClientOptions), true);
                 $ctnClientOptions['eventLoop'] = $this->eventLoop;
 
                 // Instantiate new Catenis API client
-                $this->ctnApiClient = new CatenisApiClient($command->data->ctnClientCredentials->deviceId,
+                $this->ctnApiClient = new CatenisApiClient(
+                    $command->data->ctnClientCredentials->deviceId,
                     $command->data->ctnClientCredentials->apiAccessSecret,
                     $ctnClientOptions
                 );
                 self::logDebug('Process init command: Catenis API client successfully instantiated');
-            }
-            catch (Exception $ex) {
+            } catch (Exception $ex) {
                 $errorMsg = $ex->getMessage();
                 $terminate = true;
             }
-        }
-        else {
+        } else {
             $errorMsg = 'Notification process already initialized';
         }
 
@@ -173,18 +193,17 @@ class NotificationCtrl {
                 if ($terminate) {
                     $this->terminate('Failure to initialize process', -5);
                 }
-            }
-            else {
+            } else {
                 $this->commCommand->sendInitResponseCommand(true);
             }
-        }
-        catch (Exception $ex) {
+        } catch (Exception $ex) {
             // Error sending init response. Terminate process
             $this->terminate('Error sending init response: ' . $ex->getMessage(), -4);
         }
     }
 
-    private function processOpenNotifyChannelCommand($command) {
+    private function processOpenNotifyChannelCommand($command)
+    {
         // Make sure that it had been successfully initialized
         if (isset($this->ctnApiClient)) {
             $eventName = $command->data->eventName;
@@ -202,8 +221,7 @@ class NotificationCtrl {
                 try {
                     // ... and send command notifying that notification channel was successfully opened
                     $this->commCommand->sendNotifyChannelOpenedCommand($eventName);
-                }
-                catch (Exception $ex) {
+                } catch (Exception $ex) {
                     self::logError('Error sending notification channel opened (success) command: ' . $ex->getMessage());
                 }
             }, function (Exception $ex) use ($eventName, $wsNotifyChannel) {
@@ -211,23 +229,23 @@ class NotificationCtrl {
                 if ($ex instanceof WsNotifyChannelAlreadyOpenException) {
                     // Notification channel already opened. Make sure we have its reference saved...
                     $this->wsNofifyChannels[$eventName] = $wsNotifyChannel;
-                }
-                else {
+                } else {
                     // Error opening notification channel
                     self::logError('Error opening notification channel: ' . $ex->getMessage());
                     try {
                         // Send command notifying that there was an error while opening notification channel
                         $this->commCommand->sendNotifyChannelOpenedCommand($eventName, false, $ex->getMessage());
-                    }
-                    catch (Exception $ex) {
-                        self::logError('Error sending notification channel opened (failure) command: ' . $ex->getMessage());
+                    } catch (Exception $ex) {
+                        self::logError('Error sending notification channel opened (failure) command: '
+                            . $ex->getMessage());
                     }
                 }
             });
         }
     }
 
-    private function processCloseNotifyChannelCommand($command) {
+    private function processCloseNotifyChannelCommand($command)
+    {
         // Make sure that it had been successfully initialized
         if (isset($this->ctnApiClient)) {
             $eventName = $command->data->eventName;
@@ -238,15 +256,15 @@ class NotificationCtrl {
         }
     }
 
-    private function handleNotifyChannelEvents($eventName, $wsNotifyChannel) {
+    private function handleNotifyChannelEvents($eventName, $wsNotifyChannel)
+    {
         // Wire up event handlers
         $wsNotifyChannel->on('error', function ($error) use ($eventName) {
             self::logTrace('Notification channel error');
             try {
                 // Send command back to parent process notifying of notification channel error
                 $this->commCommand->sendNotifyChannelErrorCommand($eventName, $error);
-            }
-            catch (Exception $ex) {
+            } catch (Exception $ex) {
                 self::logError('Error sending notification channel error command: ' . $ex->getMessage());
             }
         });
@@ -259,8 +277,7 @@ class NotificationCtrl {
             try {
                 // Send command back to parent process notifying that notification channel has been closed
                 $this->commCommand->sendNotifyChannelClosedCommand($eventName, $code, $reason);
-            }
-            catch (Exception $ex) {
+            } catch (Exception $ex) {
                 self::logError('Error sending notification channel closed command: ' . $ex->getMessage());
             }
         });
@@ -270,8 +287,7 @@ class NotificationCtrl {
             try {
                 // Send command back to parent process notifying of new notification event
                 $this->commCommand->sendNotificationCommand($eventName, $data);
-            }
-            catch (Exception $ex) {
+            } catch (Exception $ex) {
                 self::logError('Error sending notification command: ' . $ex->getMessage());
             }
         });
@@ -284,14 +300,14 @@ class NotificationCtrl {
      * @param int $keepAliveInterval - Time (in seconds) for continuously checking whether parent process is still alive
      * @throws Exception
      */
-    function __construct($clientUID, LoopInterface $loop, $keepAliveInterval = 120) {
+    public function __construct($clientUID, LoopInterface $loop, $keepAliveInterval = 120)
+    {
         $this->clientUID = $clientUID;
         $this->eventLoop = $loop;
 
         try {
             $this->commPipe = new CommPipe($clientUID, false);
-        }
-        catch (Exception $ex) {
+        } catch (Exception $ex) {
             throw new Exception('Error opening communication pipe: ' . $ex->getMessage());
         }
 
@@ -305,7 +321,8 @@ class NotificationCtrl {
         $this->checkParentAliveTimer = $loop->addPeriodicTimer($keepAliveInterval, [$this, 'checkParentAlive']);
     }
 
-    function receiveCommand($data) {
+    public function receiveCommand($data)
+    {
         self::logTrace('Receive command handler: ' . print_r($data, true));
         // Command receive. Indicate that parent is alive
         $this->setParentAlive();
@@ -313,12 +330,12 @@ class NotificationCtrl {
         $this->processCommands();
     }
 
-    function checkParentAlive() {
+    public function checkParentAlive()
+    {
         self::logTrace('Check parent alive handler');
         if (!$this->isParentAlive) {
             $this->processParentDeath();
-        }
-        else {
+        } else {
             $this->resetParentAlive();
         }
     }

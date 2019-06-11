@@ -7,8 +7,8 @@ namespace Catenis\WP\Notification;
 
 use \Exception;
 
-
-class CommPipe {
+class CommPipe
+{
     const SEND_COMM_MODE = 0x1;
     const RECEIVE_COMM_MODE = 0x2;
     
@@ -31,7 +31,12 @@ class CommPipe {
      * @param bool $createPipes - Indicates whether communication pipes should be created if they do not exist yet
      * @throws Exception
      */
-    function __construct($clientUID, $isParent = true, $commMode = self::SEND_COMM_MODE | self::RECEIVE_COMM_MODE, $createPipes = false) {
+    public function __construct(
+        $clientUID,
+        $isParent = true,
+        $commMode = self::SEND_COMM_MODE | self::RECEIVE_COMM_MODE,
+        $createPipes = false
+    ) {
         $this->clientUID = $clientUID;
         $this->commMode = $commMode;
         
@@ -40,8 +45,7 @@ class CommPipe {
         if ($isParent) {
             $this->inputFifoPath = $baseFifoPathName . '.down';
             $this->outputFifoPath = $baseFifoPathName . '.up';
-        }
-        else {
+        } else {
             $this->inputFifoPath = $baseFifoPathName . '.up';
             $this->outputFifoPath = $baseFifoPathName . '.down';
         }
@@ -52,11 +56,11 @@ class CommPipe {
         if (!file_exists($this->inputFifoPath)) {
             if ($createPipes) {
                 if (!posix_mkfifo($this->inputFifoPath, 0600)) {
-                    throw new Exception(sprintf('Error creating communication input fifo: ' . posix_strerror(posix_get_last_error())));
+                    throw new Exception(sprintf('Error creating communication input fifo: '
+                        . posix_strerror(posix_get_last_error())));
                 }
             }
-        }
-        else {
+        } else {
             $this->inputFifoDidNotExist = false;
         }
 
@@ -67,11 +71,11 @@ class CommPipe {
                 if (!posix_mkfifo($this->outputFifoPath, 0600)) {
                     // Delete other fifo to be consistent
                     @unlink($this->inputFifoPath);
-                    throw new Exception('Error creating communication output fifo: ' . posix_strerror(posix_get_last_error()));
+                    throw new Exception('Error creating communication output fifo: '
+                        . posix_strerror(posix_get_last_error()));
                 }
             }
-        }
-        else {
+        } else {
             $this->outputFifoDidNotExist = false;
         }
 
@@ -107,23 +111,28 @@ class CommPipe {
         }
     }
     
-    function __destruct() {
+    public function __destruct()
+    {
         $this->close();
     }
 
-    function getInputPipe() {
+    public function getInputPipe()
+    {
         return $this->inputFifo;
     }
 
-    function pipesExist() {
+    public function pipesExist()
+    {
         return file_exists($this->inputFifoPath) && file_exists($this->outputFifoPath);
     }
 
-    function werePipesAlreadyCreated() {
+    public function werePipesAlreadyCreated()
+    {
         return !$this->inputFifoDidNotExist || !$this->outputFifoDidNotExist;
     }
 
-    function close() {
+    public function close()
+    {
         if (is_resource($this->inputFifo)) {
             @fclose($this->inputFifo);
             $this->inputFifo = null;
@@ -135,7 +144,8 @@ class CommPipe {
         }
     }
 
-    function delete() {
+    public function delete()
+    {
         $this->close();
 
         if (file_exists($this->inputFifoPath)) {
@@ -152,7 +162,8 @@ class CommPipe {
      * @return string - The data read
      * @throws Exception
      */
-    function receive($timeout = 5) {
+    public function receive($timeout = 5)
+    {
         if (!$this->inputFifo) {
             throw new Exception('Cannot receive data; input pipe not open');
         }
@@ -170,19 +181,16 @@ class CommPipe {
 
             if ($result === false) {
                 $errorMsg = error_get_last()['message'];
-            }
-            elseif ($result > 0) {
+            } elseif ($result > 0) {
                 $dataReady = true;
             }
 
             $timeout -= $waitTimeout * 0.000001;
-        }
-        while (!$dataReady && $timeout > 0 && empty($errorMsg));
+        } while (!$dataReady && $timeout > 0 && empty($errorMsg));
 
         if (!empty($errorMsg)) {
             throw new Exception('Error waiting on input pipe to receive data: ' . $errorMsg);
-        }
-        elseif ($dataReady) {
+        } elseif ($dataReady) {
             // Data available. Read it
             $data = '';
 
@@ -194,10 +202,8 @@ class CommPipe {
                 }
 
                 $data .= $dataRead;
-            }
-            while (strlen($dataRead) > 0);
-        }
-        else {
+            } while (strlen($dataRead) > 0);
+        } else {
             // No data available
             $data = '';
         }
@@ -210,7 +216,8 @@ class CommPipe {
      * @param int $timeout - Timeout (in seconds) for waiting for pipe to be ready to send data
      * @throws Exception
      */
-    function send($data, $timeout = 15) {
+    public function send($data, $timeout = 15)
+    {
         if (!$this->outputFifo) {
             throw new Exception('Cannot send data; output pipe not open');
         }
@@ -231,19 +238,16 @@ class CommPipe {
 
                 if ($result === false) {
                     $errorMsg = error_get_last()['message'];
-                }
-                elseif ($result > 0) {
+                } elseif ($result > 0) {
                     $pipeReady = true;
                 }
 
                 $timeout -= $waitTimeout * 0.000001;
-            }
-            while (!$pipeReady && $timeout > 0 && empty($errorMsg));
+            } while (!$pipeReady && $timeout > 0 && empty($errorMsg));
 
             if (!empty($errorMsg)) {
                 throw new Exception('Error waiting on output pipe to send data: ' . $errorMsg);
-            }
-            elseif ($pipeReady) {
+            } elseif ($pipeReady) {
                 // Pipe ready. Send data
                 $bytesSent = fwrite($this->outputFifo, $data);
 
@@ -252,12 +256,10 @@ class CommPipe {
                 }
 
                 $bytesToSend -= $bytesSent;
-            }
-            else {
+            } else {
                 // Pipe did not become available. Data not sent
                 throw new Exception('Pipe not available; data not sent');
             }
-        }
-        while ($bytesToSend > 0);
+        } while ($bytesToSend > 0);
     }
 }

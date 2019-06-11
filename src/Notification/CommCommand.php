@@ -10,8 +10,8 @@ use Exception;
 use Catenis\WP\Evenement\EventEmitterInterface;
 use Catenis\WP\Evenement\EventEmitterTrait;
 
-
-class CommCommand implements EventEmitterInterface {
+class CommCommand implements EventEmitterInterface
+{
     use EventEmitterTrait;
 
     const INIT_CMD = 'init';
@@ -34,7 +34,8 @@ class CommCommand implements EventEmitterInterface {
      * @param mixed|null $data
      * @throws Exception
      */
-    private function sendCommand($command, $data = null) {
+    private function sendCommand($command, $data = null)
+    {
         $cmdObj = new stdClass();
 
         $cmdObj->cmd = $command;
@@ -46,7 +47,8 @@ class CommCommand implements EventEmitterInterface {
         $this->commPipe->send(self::$commandSeparator . json_encode($cmdObj));
     }
 
-    public static function commandType(stdClass $command) {
+    public static function commandType(stdClass $command)
+    {
         return !empty($command->cmd) && is_string($command->cmd) ? $command->cmd : '';
     }
 
@@ -54,7 +56,8 @@ class CommCommand implements EventEmitterInterface {
      * CommCommand constructor.
      * @param CommPipe $commPipe
      */
-    function __construct(CommPipe $commPipe) {
+    public function __construct(CommPipe $commPipe)
+    {
         $this->commPipe = $commPipe;
         $this->receivedCommands = [];
     }
@@ -63,14 +66,16 @@ class CommCommand implements EventEmitterInterface {
      * @param stdClass $ctnClientData
      * @throws Exception
      */
-    function sendInitCommand(stdClass $ctnClientData) {
+    public function sendInitCommand(stdClass $ctnClientData)
+    {
         $this->sendCommand(self::INIT_CMD, $ctnClientData);
     }
 
     /**
      * @throws Exception
      */
-    function sendPingCommand() {
+    public function sendPingCommand()
+    {
         $this->sendCommand(self::PING_CMD);
     }
 
@@ -78,7 +83,8 @@ class CommCommand implements EventEmitterInterface {
      * @param string $eventName
      * @throws Exception
      */
-    function sendOpenNotifyChannelCommand($eventName) {
+    public function sendOpenNotifyChannelCommand($eventName)
+    {
         $this->sendCommand(self::OPEN_NOTIFY_CHANNEL_CMD, [
             'eventName' => $eventName
         ]);
@@ -88,7 +94,8 @@ class CommCommand implements EventEmitterInterface {
      * @param string $eventName
      * @throws Exception
      */
-    function sendCloseNotifyChannelCommand($eventName) {
+    public function sendCloseNotifyChannelCommand($eventName)
+    {
         $this->sendCommand(self::CLOSE_NOTIFY_CHANNEL_CMD, [
             'eventName' => $eventName
         ]);
@@ -99,7 +106,8 @@ class CommCommand implements EventEmitterInterface {
      * @param string|null $error
      * @throws Exception
      */
-    function sendInitResponseCommand($success = true, $error = null) {
+    public function sendInitResponseCommand($success = true, $error = null)
+    {
         $cmdData = new stdClass();
         $cmdData->success = $success;
 
@@ -115,7 +123,8 @@ class CommCommand implements EventEmitterInterface {
      * @param stdClass $eventData
      * @throws Exception
      */
-    function sendNotificationCommand($eventName, stdClass $eventData) {
+    public function sendNotificationCommand($eventName, stdClass $eventData)
+    {
         $this->sendCommand(self::NOTIFICATION_CMD, [
             'eventName' => $eventName,
             'eventData' => $eventData
@@ -128,7 +137,8 @@ class CommCommand implements EventEmitterInterface {
      * @param string|null $error
      * @throws Exception
      */
-    function sendNotifyChannelOpenedCommand($eventName, $success = true, $error = null) {
+    public function sendNotifyChannelOpenedCommand($eventName, $success = true, $error = null)
+    {
         $cmdData = new stdClass();
         $cmdData->eventName = $eventName;
         $cmdData->success = $success;
@@ -145,7 +155,8 @@ class CommCommand implements EventEmitterInterface {
      * @param string $error
      * @throws Exception
      */
-    function sendNotifyChannelErrorCommand($eventName, $error) {
+    public function sendNotifyChannelErrorCommand($eventName, $error)
+    {
         $this->sendCommand(self::NOTIFY_CHANNEL_ERROR_CMD, [
             'eventName' => $eventName,
             'error' => $error
@@ -158,7 +169,8 @@ class CommCommand implements EventEmitterInterface {
      * @param string $reason
      * @throws Exception
      */
-    function sendNotifyChannelClosedCommand($eventName, $code, $reason) {
+    public function sendNotifyChannelClosedCommand($eventName, $code, $reason)
+    {
         $this->sendCommand(self::NOTIFY_CHANNEL_CLOSED_CMD, [
             'eventName' => $eventName,
             'code' => $code,
@@ -169,15 +181,17 @@ class CommCommand implements EventEmitterInterface {
     /**
      * @param string $data
      */
-    function parseCommands($data) {
+    public function parseCommands($data)
+    {
         if (is_string($data) && !empty($data)) {
             $dataChunks = explode(self::$commandSeparator, $data);
 
-            foreach($dataChunks as $idx => $jsonCmd) {
+            foreach ($dataChunks as $idx => $jsonCmd) {
                 if (!empty($jsonCmd)) {
                     $command = json_decode($jsonCmd);
 
-                    if (!empty($command) && $command instanceof stdClass && !empty($command->cmd) && is_string($command->cmd)) {
+                    if (!empty($command) && $command instanceof stdClass && !empty($command->cmd)
+                            && is_string($command->cmd)) {
                         switch ($command->cmd) {
                             case self::INIT_CMD:
                             case self::PING_CMD:
@@ -201,17 +215,20 @@ class CommCommand implements EventEmitterInterface {
     /**
      * @throws Exception
      */
-    function receive() {
+    public function receive()
+    {
         $this->parseCommands($this->commPipe->receive());
 
         return $this->hasReceivedCommand();
     }
 
-    function hasReceivedCommand() {
+    public function hasReceivedCommand()
+    {
         return !empty($this->receivedCommands);
     }
 
-    function getNextCommand() {
+    public function getNextCommand()
+    {
         return array_shift($this->receivedCommands);
     }
 }
