@@ -15,7 +15,7 @@ $MAX_LOG_SIZE = 10 * 1024 * 1024;  // 10 MB
 if ($LOGGING) {
     // Open log file
     if (!file_exists(__DIR__ . '/../../log')) {
-        if (mkdir(__DIR__ . '/../../log', 0700) == false) {
+        if (!mkdir(__DIR__ . '/../../log', 0700)) {
             exit(-3);
         }
     }

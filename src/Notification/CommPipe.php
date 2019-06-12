@@ -74,8 +74,11 @@ class CommPipe
         if (!file_exists($this->inputFifoPath)) {
             if ($createPipes) {
                 if (!posix_mkfifo($this->inputFifoPath, 0600)) {
-                    throw new Exception(sprintf('Error creating communication input fifo: '
-                        . posix_strerror(posix_get_last_error())));
+                    throw new Exception(sprintf(
+                        'Error creating communication input fifo (%s): %s',
+                        $this->inputFifoPath,
+                        posix_strerror(posix_get_last_error())
+                    ));
                 }
             }
         } else {
@@ -89,8 +92,11 @@ class CommPipe
                 if (!posix_mkfifo($this->outputFifoPath, 0600)) {
                     // Delete other fifo to be consistent
                     @unlink($this->inputFifoPath);
-                    throw new Exception('Error creating communication output fifo: '
-                        . posix_strerror(posix_get_last_error()));
+                    throw new Exception(sprintf(
+                        'Error creating communication output fifo (%s): %s',
+                        $this->outputFifoPath,
+                        posix_strerror(posix_get_last_error())
+                    ));
                 }
             }
         } else {
