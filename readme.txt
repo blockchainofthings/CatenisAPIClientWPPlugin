@@ -2,7 +2,7 @@
 Contributors: catenisadmin
 Tags: Catenis, Catenis Enterprise API, Blockchain of Things, blockchain
 Requires at least: 4.0
-Tested up to: 5.0.2
+Tested up to: 5.2.1
 Requires PHP: 5.6
 Stable tag: 2.0.0
 License: MIT
