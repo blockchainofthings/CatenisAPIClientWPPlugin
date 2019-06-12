@@ -39,8 +39,26 @@ class CommPipe
     ) {
         $this->clientUID = $clientUID;
         $this->commMode = $commMode;
+
+        // Make sure that directory used for interprocess communication exists
+        $ipcDir = __DIR__ . '/../../io';
         
-        $baseFifoPathName = __DIR__ . '/../../io/' . $clientUID;
+        if (!file_exists($ipcDir)) {
+            if (!mkdir($ipcDir, 0700)) {
+                // Make sure that it has not failed because directory already exists (errno = 17 (EEXIST))
+                $lastError = posix_get_last_error();
+
+                if ($lastError != 17) {
+                    throw new Exception(sprintf(
+                        'Error creating interprocess communication directory (%s): %s',
+                        $ipcDir,
+                        posix_strerror($lastError)
+                    ));
+                }
+            }
+        }
+    
+        $baseFifoPathName = $ipcDir . '/' . $clientUID;
 
         if ($isParent) {
             $this->inputFifoPath = $baseFifoPathName . '.down';
