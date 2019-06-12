@@ -21,14 +21,17 @@ else
 fi
 
 cp -R "$SCRIPT_DIR"/../vendor/* "$THIRDPARTY_DIR"/
-# Make sure that .git directories are removed
-rm -rf $(find "$THIRDPARTY_DIR" -name .git -type d -print)
-
-echo -n "Fixing namespace of third party packages... "
 
 # Change Internal Field Separator special environment variable so `for` loops can correctly
 #  iterate over file paths containing spaces
 IFS=$(echo -en "\n\b")
+
+# Make sure that .git directories are removed
+for d in $(find "$THIRDPARTY_DIR" -name .git -type d -print); do
+    rm -rf "$d"
+done
+
+echo -n "Fixing namespace of third party packages... "
 
 # Change namespace of third-party components moving them under our own plugin namespace
 for f in $(find "$THIRDPARTY_DIR" -name "*.php" -print); do
