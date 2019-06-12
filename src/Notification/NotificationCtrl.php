@@ -35,7 +35,7 @@ class NotificationCtrl
 
     public static function execProcess($clientUID)
     {
-        return exec('php ' . __DIR__ . '/catenis_notify_proc.php ' . $clientUID . ' > /dev/null &');
+        return exec('php "' . __DIR__ . '/catenis_notify_proc.php" ' . $clientUID . ' > /dev/null &');
     }
 
     public static function logError($message)
