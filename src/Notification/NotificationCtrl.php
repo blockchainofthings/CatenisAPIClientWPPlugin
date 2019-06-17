@@ -206,29 +206,30 @@ class NotificationCtrl
     {
         // Make sure that it had been successfully initialized
         if (isset($this->ctnApiClient)) {
+            $channelId = $command->data->channelId;
             $eventName = $command->data->eventName;
             $wsNotifyChannel = $this->ctnApiClient->createWsNotifyChannel($eventName);
             self::logDebug('Process open notification channel: WS notify channel object successfully created');
 
-            $this->handleNotifyChannelEvents($eventName, $wsNotifyChannel);
+            $this->handleNotifyChannelEvents($channelId, $wsNotifyChannel);
 
             // Open notification channel
-            $wsNotifyChannel->open()->then(function () use ($eventName, $wsNotifyChannel) {
+            $wsNotifyChannel->open()->then(function () use ($channelId, $wsNotifyChannel) {
                 self::logDebug('Process open notification channel: open channel succeeded');
                 // Underlying WebSocket connection successfully open. Save notification channel reference,
                 //  and wait for 'open' event indicating that notification channel is successfully open
-                $this->wsNofifyChannels[$eventName] = $wsNotifyChannel;
-            }, function (Exception $ex) use ($eventName, $wsNotifyChannel) {
+                $this->wsNofifyChannels[$channelId] = $wsNotifyChannel;
+            }, function (Exception $ex) use ($channelId, $wsNotifyChannel) {
                 self::logDebug('Process open notification channel: open channel failed');
                 if ($ex instanceof WsNotifyChannelAlreadyOpenException) {
                     // Notification channel already opened. Make sure we have its reference saved...
-                    $this->wsNofifyChannels[$eventName] = $wsNotifyChannel;
+                    $this->wsNofifyChannels[$channelId] = $wsNotifyChannel;
                 } else {
                     // Error opening notification channel
                     self::logError('Error opening notification channel: ' . $ex->getMessage());
                     try {
                         // Send command notifying that there was an error while opening notification channel
-                        $this->commCommand->sendNotifyChannelOpenedCommand($eventName, false, $ex->getMessage());
+                        $this->commCommand->sendNotifyChannelOpenedCommand($channelId, $ex->getMessage());
                     } catch (Exception $ex) {
                         self::logError('Error sending notification channel opened (failure) command: '
                             . $ex->getMessage());
@@ -242,55 +243,55 @@ class NotificationCtrl
     {
         // Make sure that it had been successfully initialized
         if (isset($this->ctnApiClient)) {
-            $eventName = $command->data->eventName;
+            $channelId = $command->data->channelId;
 
-            if (isset($this->wsNofifyChannels[$eventName])) {
-                $this->wsNofifyChannels[$eventName]->close();
+            if (isset($this->wsNofifyChannels[$channelId])) {
+                $this->wsNofifyChannels[$channelId]->close();
             }
         }
     }
 
-    private function handleNotifyChannelEvents($eventName, $wsNotifyChannel)
+    private function handleNotifyChannelEvents($channelId, $wsNotifyChannel)
     {
         // Wire up event handlers
-        $wsNotifyChannel->on('error', function ($error) use ($eventName) {
+        $wsNotifyChannel->on('error', function ($error) use ($channelId) {
             self::logTrace('Notification channel error');
             try {
                 // Send command back to parent process notifying of notification channel error
-                $this->commCommand->sendNotifyChannelErrorCommand($eventName, $error);
+                $this->commCommand->sendNotifyChannelErrorCommand($channelId, $error);
             } catch (Exception $ex) {
                 self::logError('Error sending notification channel error command: ' . $ex->getMessage());
             }
         });
 
-        $wsNotifyChannel->on('close', function ($code, $reason) use ($eventName) {
+        $wsNotifyChannel->on('close', function ($code, $reason) use ($channelId) {
             self::logTrace('Notification channel close');
             // Remove notification channel reference
-            unset($this->wsNofifyChannels[$eventName]);
+            unset($this->wsNofifyChannels[$channelId]);
 
             try {
                 // Send command back to parent process notifying that notification channel has been closed
-                $this->commCommand->sendNotifyChannelClosedCommand($eventName, $code, $reason);
+                $this->commCommand->sendNotifyChannelClosedCommand($channelId, $code, $reason);
             } catch (Exception $ex) {
                 self::logError('Error sending notification channel closed command: ' . $ex->getMessage());
             }
         });
 
-        $wsNotifyChannel->on('open', function () use ($eventName) {
+        $wsNotifyChannel->on('open', function () use ($channelId) {
             self::logTrace('Notification channel open');
             try {
                 // Send command notifying that notification channel is successfully open
-                $this->commCommand->sendNotifyChannelOpenedCommand($eventName);
+                $this->commCommand->sendNotifyChannelOpenedCommand($channelId);
             } catch (Exception $ex) {
                 self::logError('Error sending notification channel opened command: ' . $ex->getMessage());
             }
         });
 
-        $wsNotifyChannel->on('notify', function ($data) use ($eventName) {
+        $wsNotifyChannel->on('notify', function ($data) use ($channelId) {
             self::logTrace('Notification channel notify');
             try {
                 // Send command back to parent process notifying of new notification event
-                $this->commCommand->sendNotificationCommand($eventName, $data);
+                $this->commCommand->sendNotificationCommand($channelId, $data);
             } catch (Exception $ex) {
                 self::logError('Error sending notification command: ' . $ex->getMessage());
             }

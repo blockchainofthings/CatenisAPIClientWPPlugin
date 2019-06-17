@@ -1,5 +1,6 @@
 (function (context) {
     function ApiProxy() {
+        this.channelIdWsNotifyChannel = {};
     }
 
     // Make ApiProxy to inherit from EventEmitter
@@ -310,13 +311,21 @@
         callApiMethod('listAssetHolders', params, callback);
     };
 
-    ApiProxy.prototype.openNotifyChannel = function (eventName, callback) {
-        openNotifyChannel(eventName, callback);
+    ApiProxy.prototype.createWsNotifyChannel = function (eventName) {
+        return new WsNotifyChannel(this, eventName);
     };
 
-    ApiProxy.prototype.closeNotifyChannel = function (eventName, callback) {
-        closeNotifyChannel(eventName, callback);
-    };
+    ApiProxy.prototype._setWsNotifyChannel = function (wsNotifyChannel) {
+        this.channelIdWsNotifyChannel[wsNotifyChannel.channelId] = wsNotifyChannel;
+    }
+
+    ApiProxy.prototype._clearWsNotifyChannel = function (wsNotifyChannel) {
+        delete this.channelIdWsNotifyChannel[wsNotifyChannel.channelId];
+    }
+
+    ApiProxy.prototype._getWsNotifyChannel = function (channelId) {
+        return this.channelIdWsNotifyChannel[channelId];
+    }
 
     function callApiMethod(methodName, methodParams, cb) {
         jQuery.post(context.ctn_api_proxy_obj.ajax_url, {
@@ -332,7 +341,7 @@
         }, 'json')
         .fail(function (jqXHR, textStatus, errorThrown) {
             // Failure
-            let errMessage;
+            var errMessage;
 
             console.log('JSON response:', jqXHR.responseJSON);
             console.log('Error thrown:', errorThrown);
@@ -352,66 +361,106 @@
         });
     }
 
-    function openNotifyChannel(eventName, cb) {
-        jQuery.post(context.ctn_api_proxy_obj.ajax_url, {
-            _ajax_nonce: context.ctn_api_proxy_obj.nonce,
-            action: "open_notify_channel",
-            post_id: context.ctn_api_proxy_obj.post_id,
-            client_uid: context.ctn_api_proxy_obj.client_uid,
-            event_name: eventName
-        }, function (data) {
-            // Success
-            cb(undefined, data.data);
-        }, 'json')
-        .fail(function (jqXHR, textStatus, errorThrown) {
-            // Failure
-            let errMessage;
-
-            console.log('JSON response:', jqXHR.responseJSON);
-            console.log('Error thrown:', errorThrown);
-
-            if (jqXHR.status >= 100) {
-                errMessage = '[' + jqXHR.status + '] - ' + (typeof jqXHR.responseJSON === 'object' && jqXHR.responseJSON !== null && jqXHR.responseJSON.data
-                        && typeof jqXHR.responseJSON.data === 'string' ? jqXHR.responseJSON.data : jqXHR.statusText);
-            } else {
-                errMessage = 'Ajax client error' + (textStatus ? ' (' + textStatus + ')' : '') + (errorThrown ? ': ' + errorThrown : '');
-            }
-
-            // Display returned error
-            console.log(errMessage);
-            cb(new Error(errMessage));
-        });
+    function WsNotifyChannel(apiProxy, eventName) {
+        this.apiProxy = apiProxy;
+        this.eventName = eventName;
+        this.channelId = random(12);
     }
 
-    function closeNotifyChannel(eventName, cb) {
+    // Make WsNotifyChannel to inherit from EventEmitter
+    heir.inherit(WsNotifyChannel, EventEmitter, true);
+
+    WsNotifyChannel.prototype.open = function (callback) {
+        var _self = this;
+
+        // Make sure that notification channel for this instance is not yet open
+        if (!this.apiProxy._getWsNotifyChannel(this.channelId)) {
+            jQuery.post(context.ctn_api_proxy_obj.ajax_url, {
+                _ajax_nonce: context.ctn_api_proxy_obj.nonce,
+                action: "open_notify_channel",
+                post_id: context.ctn_api_proxy_obj.post_id,
+                client_uid: context.ctn_api_proxy_obj.client_uid,
+                channel_id: this.channelId,
+                event_name: this.eventName
+            }, function (data) {
+                // Success. Save notification channel instance and return
+                _self.apiProxy._setWsNotifyChannel(_self);
+                callback(undefined);
+            }, 'json')
+            .fail(function (jqXHR, textStatus, errorThrown) {
+                // Failure
+                var errMessage;
+
+                console.log('JSON response:', jqXHR.responseJSON);
+                console.log('Error thrown:', errorThrown);
+
+                if (jqXHR.status >= 100) {
+                    errMessage = '[' + jqXHR.status + '] - ' + (typeof jqXHR.responseJSON === 'object' && jqXHR.responseJSON !== null && jqXHR.responseJSON.data
+                            && typeof jqXHR.responseJSON.data === 'string' ? jqXHR.responseJSON.data : jqXHR.statusText);
+                } else {
+                    errMessage = 'Ajax client error' + (textStatus ? ' (' + textStatus + ')' : '') + (errorThrown ? ': ' + errorThrown : '');
+                }
+
+                // Display returned error
+                console.log(errMessage);
+                callback(new Error(errMessage));
+            });
+        }
+    }
+
+    WsNotifyChannel.prototype.close = function (callback) {
         jQuery.post(context.ctn_api_proxy_obj.ajax_url, {
             _ajax_nonce: context.ctn_api_proxy_obj.nonce,
             action: "close_notify_channel",
             post_id: context.ctn_api_proxy_obj.post_id,
             client_uid: context.ctn_api_proxy_obj.client_uid,
-            event_name: eventName
+            channel_id: this.channelId
         }, function (data) {
             // Success
-            cb(undefined, data.data);
+            callback(undefined);
         }, 'json')
         .fail(function (jqXHR, textStatus, errorThrown) {
             // Failure
-            let errMessage;
+            var errMessage;
 
             console.log('JSON response:', jqXHR.responseJSON);
             console.log('Error thrown:', errorThrown);
 
             if (jqXHR.status >= 100) {
                 errMessage = '[' + jqXHR.status + '] - ' + (typeof jqXHR.responseJSON === 'object' && jqXHR.responseJSON !== null && jqXHR.responseJSON.data
-                && typeof jqXHR.responseJSON.data === 'string' ? jqXHR.responseJSON.data : jqXHR.statusText);
+                    && typeof jqXHR.responseJSON.data === 'string' ? jqXHR.responseJSON.data : jqXHR.statusText);
             } else {
                 errMessage = 'Ajax client error' + (textStatus ? ' (' + textStatus + ')' : '') + (errorThrown ? ': ' + errorThrown : '');
             }
 
             // Display returned error
             console.log(errMessage);
-            cb(new Error(errMessage));
+            callback(new Error(errMessage));
         });
+    }
+
+    function random(length) {
+        var validChars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+        var numChars = validChars.length;
+        var result = '';
+
+        if (context.crypto) {
+            // Use cryptographically secure implementation
+            var array = new Uint8Array(length);
+            context.crypto.getRandomValues(array);
+            array = array.map(function (x) {
+                return validChars.charCodeAt(x % numChars)
+            });
+            result = String.fromCharCode.apply(null, array);
+        }
+        else {
+            // Use less secure implementation
+            for (idx = 0; idx < length; idx++) {
+                result += validChars.charAt(Math.floor(Math.random() * numChars));
+            }
+        }
+
+        return result;
     }
 
     context.ctnApiProxy = new ApiProxy();
@@ -438,35 +487,53 @@
 
             if (!ctn_api_client_response.success) {
                 // Error heartbeat response. Emit error event from ApiProxy object
-                context.ctnApiProxy.emitEvent('comm_error', [ctn_api_client_response.error]);
+                context.ctnApiProxy.emitEvent('comm-error', [ctn_api_client_response.error]);
             }
             else {
                 // Success heartbeat response. Look for notification process commands returned
                 if ('notifyCommands' in ctn_api_client_response) {
                     ctn_api_client_response.notifyCommands.split('|').forEach(function (jsonCommand) {
                         var command = JSON.parse(jsonCommand);
+                        var channelId = command.data.channelId;
 
-                        if (command) {
-                            switch (command.cmd) {
-                                case 'notification':
-                                    // Emit corresponding event from ApiProxy object
-                                    context.ctnApiProxy.emitEvent('notification', [command.data.eventName, command.data.eventData]);
-                                    break;
+                        // Retrieve notification channel instance
+                        wsNotifyChannel = context.ctnApiProxy._getWsNotifyChannel(channelId);
 
-                                case 'notify_channel_opened':
-                                    // Emit corresponding event from ApiProxy object
-                                    context.ctnApiProxy.emitEvent('notify_channel_opened', [command.data.eventName, command.data.success, command.data.error]);
-                                    break;
+                        if (wsNotifyChannel) {
+                            if (command) {
+                                switch (command.cmd) {
+                                    case 'notification':
+                                        // Emit corresponding event from notification channel instance object
+                                        wsNotifyChannel.emitEvent('notify', [command.data.eventData]);
+                                        break;
+    
+                                    case 'notify_channel_opened':
+                                        var eventData;
+                                        
+                                        if (command.data.error) {
+                                            // Error opening notification channel. Clear notification channel
+                                            //  instance and prepare to return error
+                                            context.ctnApiProxy._clearWsNotifyChannel(wsNotifyChannel);
+                                            eventData = [command.data.error];
+                                        }
 
-                                case 'notify_channel_error':
-                                    // Emit corresponding event from ApiProxy object
-                                    context.ctnApiProxy.emitEvent('notify_channel_error', [command.data.eventName, command.data.error]);
-                                    break;
+                                        // Emit corresponding event from notification channel instance object
+                                        wsNotifyChannel.emitEvent('open', eventData);
+                                        break;
+    
+                                    case 'notify_channel_error':
+                                        // Emit corresponding event from notification channel instance object
+                                        wsNotifyChannel.emitEvent('error', [command.data.error]);
+                                        break;
+    
+                                    case 'notify_channel_closed':
+                                        // Notification channel has been closed. Clear notification channel instance
+                                        context.ctnApiProxy._clearWsNotifyChannel(wsNotifyChannel);
 
-                                case 'notify_channel_closed':
-                                    // Emit corresponding event from ApiProxy object
-                                    context.ctnApiProxy.emitEvent('notify_channel_closed', [command.data.eventName, command.data.code, command.data.reason]);
-                                    break;
+                                        // Emit corresponding event from notification channel instance object
+                                        wsNotifyChannel.emitEvent('close', [command.data.code, command.data.reason]);
+                                        break;
+                                }
                             }
                         }
                     });

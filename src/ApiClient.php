@@ -550,10 +550,11 @@ class ApiClient
         }
 
         // Send command to open notification channel
+        $channelId = $_POST['channel_id'];
         $eventName = $_POST['event_name'];
 
         try {
-            $commCommand->sendOpenNotifyChannelCommand($eventName);
+            $commCommand->sendOpenNotifyChannelCommand($channelId, $eventName);
         } catch (Exception $ex) {
             wp_send_json_error('Error sending open notification channel command: ' . $ex->getMessage(), 500);
         }
@@ -584,10 +585,10 @@ class ApiClient
             $commCommand = new CommCommand($commPipe);
 
             // Send command to close notification channel
-            $eventName = $_POST['event_name'];
+            $channelId = $_POST['channel_id'];
 
             try {
-                $commCommand->sendCloseNotifyChannelCommand($eventName);
+                $commCommand->sendCloseNotifyChannelCommand($channelId);
             } catch (Exception $ex) {
                 wp_send_json_error('Error sending close notification channel command: ' . $ex->getMessage(), 500);
             }

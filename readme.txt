@@ -23,13 +23,16 @@ You can then choose to override the global settings used for instantiating the C
 
 Once enabled, a global JavaScript variable named `ctnApiClient` is made available on the page. That variable holds the instantiated Catenis API client object.
 
-Use the `ctnApiClient` variable to call the Catenis Enterprise API methods by invoking the corresponding method on that object.
+Use the *ctnApiClient* variable to call the Catenis Enterprise API methods by invoking the corresponding method on that object.
 
 For a reference of the available methods, please refer to the [Catenis API JavaScript Client](https://github.com/blockchainofthings/CatenisAPIClientJS) as it is functionally identical to the Catenis API Client for WordPress, except for notifications support and error handling.
 
 = Notifications support =
 
-Unlike the Catenis API JavaScript client, notifications from the Catenis system are handled directly from the Catenis API client object.
+The notification feature on Catenis API Client for WordPress is almost identical to the one found on the Catenis API JavaScript client. The two noticeable differences are:
+
+1. The Catenis API client object can emit a `comm-error` event.
+1. The `open` event emitted by the WebSocket notification channel object may return an error.
 
 Please refer to the "Receiving Notifications" section below for detailed information on how to receive Catenis notifications from within WordPress pages.
 
@@ -68,6 +71,7 @@ However, when doing it on the "Catenis API Client" meta box on a WordPress page'
 = 2.0.0 =
 * Update Catenis API client for PHP to its latest version (2.1.1), which targets version 0.7 of the Catenis Enterprise API.
 * Changes to accommodate changes introduced by the new version of the Catenis API client for PHP, including: a) change in the interface of the Send Message API method; and b) addition of new Retrieve Message Progress API method.
+* Whole new (not backwards compatible) and improved notifications implementation.
 
 = 1.1.2 =
 * Internal adjustments to usage of WP Heartbeat API.
@@ -85,7 +89,7 @@ However, when doing it on the "Catenis API Client" meta box on a WordPress page'
 == Upgrade Notice ==
 
 = 2.0.0 =
-Upgrade to this version to take advantage of the new features found in version 0.7 of the Catenis Enterprise API.
+Upgrade to this version to take advantage of the new features found in version 0.7 of the Catenis Enterprise API and the improved notifications implementation.
 
 = 1.1.2 =
 All users are advised to upgrade to this version.
@@ -98,59 +102,67 @@ All users are advised to upgrade to this version even if not planning to use not
 
 == Receiving Notifications ==
 
+= Instantiate WebSocket notification channel object
+
+Create a WebSocket notification channel for a given Catenis notification event.
+
+`
+var wsNotifyChannel = ctnApiClient.createWsNotifyChannel(eventName);
+`
+
 = Add listeners =
 
-Add event listeners to monitor activity on notification channels.
+Add event listeners to monitor activity on the notification channel.
 
 `
 ctnApiClient.on('comm-error', function (error) {
     // Error communicating with Catenis notification process
 });
 
-ctnApiClient.on('notify-channel-opened', function (eventName, success, error) {
-    if (success) {
-        // Notification channel successfully open
+wsNotifyChannel.on('open', function (error) {
+    if (error) {
+        // Error establishing underlying WebSocket connection
     }
     else {
-        // Error establishing underlying WebSocket connection
+        // Notification channel successfully open
     }
 });
 
-ctnApiClient.on('notify-channel-error', function (eventName, error) {
+wsNotifyChannel.on('error', function (error) {
     // Error in the underlying WebSocket connection
 });
 
-ctnApiClient.on('notify-channel-closed', function (eventName, code, reason) {
+wsNotifyChannel.on('close', function (code, reason) {
     // Underlying WebSocket connection has been closed
 });
 
-ctnApiClient.on('notification', function (eventName, eventData) {
+wsNotifyChannel.on('notify', function (eventData) {
     // Received notification
 });
 `
 
-> **Note**: except for the `comm-error` event, the first argument of the event listener functions -- named `eventName` -- identifies the Catenis notification event for which that event applies.
+> **Note**: the 'comm-error' event is emitted by the Catenis API client object while all other events are emitted by the WebSocket notification channel object.
 
-= Open notification channel =
+= Open the notification channel =
 
-Open a notification channel for a given Catenis notification event.
+Open the WebSocket notification channel to start receiving notifications.
 
 `
-ctnApiClient.openNotifyChannel(eventName, function (error) {
+wsNotifyChannel.open(function (error) {
     if (err) {
-        // Error from calling method
+        // Error sending command to open notification channel
     }
 });
 `
 
-= Close notification channel =
+= Close the notification channel =
 
-Close a notification channel to stop receiving notifications for that given Catenis notification event.
+Close the WebSocket notification channel to stop receiving notifications.
 
 `
-ctnApiClient.closeNotifyChannel(eventName, function (error) {
+wsNotifyChannel.close(function (error) {
     if (err) {
-        // Error from calling method
+        // Error sending command to close notification channel
     }
 });
 `

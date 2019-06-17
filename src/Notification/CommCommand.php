@@ -80,24 +80,26 @@ class CommCommand implements EventEmitterInterface
     }
 
     /**
+     * @param string $channelId
      * @param string $eventName
      * @throws Exception
      */
-    public function sendOpenNotifyChannelCommand($eventName)
+    public function sendOpenNotifyChannelCommand($channelId, $eventName)
     {
         $this->sendCommand(self::OPEN_NOTIFY_CHANNEL_CMD, [
+            'channelId' => $channelId,
             'eventName' => $eventName
         ]);
     }
 
     /**
-     * @param string $eventName
+     * @param string $channelId
      * @throws Exception
      */
-    public function sendCloseNotifyChannelCommand($eventName)
+    public function sendCloseNotifyChannelCommand($channelId)
     {
         $this->sendCommand(self::CLOSE_NOTIFY_CHANNEL_CMD, [
-            'eventName' => $eventName
+            'channelId' => $channelId
         ]);
     }
 
@@ -119,31 +121,30 @@ class CommCommand implements EventEmitterInterface
     }
 
     /**
-     * @param string $eventName
+     * @param string $channelId
      * @param stdClass $eventData
      * @throws Exception
      */
-    public function sendNotificationCommand($eventName, stdClass $eventData)
+    public function sendNotificationCommand($channelId, stdClass $eventData)
     {
         $this->sendCommand(self::NOTIFICATION_CMD, [
-            'eventName' => $eventName,
+            'channelId' => $channelId,
             'eventData' => $eventData
         ]);
     }
 
     /**
-     * @param $eventName
+     * @param $channelId
      * @param bool $success
      * @param string|null $error
      * @throws Exception
      */
-    public function sendNotifyChannelOpenedCommand($eventName, $success = true, $error = null)
+    public function sendNotifyChannelOpenedCommand($channelId, $error = null)
     {
         $cmdData = new stdClass();
-        $cmdData->eventName = $eventName;
-        $cmdData->success = $success;
+        $cmdData->channelId = $channelId;
 
-        if (!$success && !empty($error)) {
+        if (isset($error)) {
             $cmdData->error = $error;
         }
 
@@ -151,28 +152,28 @@ class CommCommand implements EventEmitterInterface
     }
 
     /**
-     * @param string $eventName
+     * @param string $channelId
      * @param string $error
      * @throws Exception
      */
-    public function sendNotifyChannelErrorCommand($eventName, $error)
+    public function sendNotifyChannelErrorCommand($channelId, $error)
     {
         $this->sendCommand(self::NOTIFY_CHANNEL_ERROR_CMD, [
-            'eventName' => $eventName,
+            'channelId' => $channelId,
             'error' => $error
         ]);
     }
 
     /**
-     * @param string $eventName
+     * @param string $channelId
      * @param int $code
      * @param string $reason
      * @throws Exception
      */
-    public function sendNotifyChannelClosedCommand($eventName, $code, $reason)
+    public function sendNotifyChannelClosedCommand($channelId, $code, $reason)
     {
         $this->sendCommand(self::NOTIFY_CHANNEL_CLOSED_CMD, [
-            'eventName' => $eventName,
+            'channelId' => $channelId,
             'code' => $code,
             'reason' => $reason
         ]);
