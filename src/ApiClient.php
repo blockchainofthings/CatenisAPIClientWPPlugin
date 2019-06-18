@@ -661,7 +661,10 @@ class ApiClient
             try {
                 if ($commCommand->receive()) {
                     do {
-                        $notifyProcCommands[]= json_encode($commCommand->getNextCommand());
+                        $notifyProcCommands[] = json_encode(
+                            $commCommand->getNextCommand(),
+                            JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES
+                        );
                     } while ($commCommand->hasReceivedCommand());
                 }
             } catch (Exception $ex) {

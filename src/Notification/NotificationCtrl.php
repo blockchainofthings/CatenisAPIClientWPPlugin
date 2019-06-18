@@ -167,7 +167,10 @@ class NotificationCtrl
         if (!isset($this->ctnApiClient)) {
             try {
                 // Convert client options from stdClass object to array
-                $ctnClientOptions = json_decode(json_encode($command->data->ctnClientOptions), true);
+                $ctnClientOptions = json_decode(json_encode(
+                    $command->data->ctnClientOptions,
+                    JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES
+                ), true);
                 $ctnClientOptions['eventLoop'] = $this->eventLoop;
 
                 // Instantiate new Catenis API client

@@ -44,7 +44,10 @@ class CommCommand implements EventEmitterInterface
             $cmdObj->data = $data;
         }
 
-        $this->commPipe->send(self::$commandSeparator . json_encode($cmdObj));
+        $this->commPipe->send(self::$commandSeparator . json_encode(
+            $cmdObj,
+            JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES
+        ));
     }
 
     public static function commandType(stdClass $command)
