@@ -69,7 +69,7 @@ However, when doing it on the "Catenis API Client" meta box on a WordPress page'
 == Changelog ==
 
 = 2.0.0 =
-* Update Catenis API client for PHP to its latest version (2.1.1), which targets version 0.7 of the Catenis Enterprise API.
+* Update Catenis API client for PHP to its latest version (2.1.2), which targets version 0.7 of the Catenis Enterprise API.
 * Changes to accommodate changes introduced by the new version of the Catenis API client for PHP, including: a) change in the interface of the Send Message API method; and b) addition of new Retrieve Message Progress API method.
 * Whole new (not backwards compatible) and improved notifications implementation.
 

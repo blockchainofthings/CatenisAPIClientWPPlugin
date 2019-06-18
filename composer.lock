@@ -4,20 +4,20 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "03b12724788aa170c4446eb204787dce",
+    "content-hash": "562b0261fbe76449176ada465cb870e4",
     "packages": [
         {
             "name": "blockchainofthings/catenis-api-client",
-            "version": "2.1.1",
+            "version": "2.1.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/blockchainofthings/CatenisAPIClientPHP.git",
-                "reference": "e6ac3e3af19d0fb703a155b6d12966af0edb0009"
+                "reference": "e7ad821843e0b0048d860088e454e40952a08b09"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/blockchainofthings/CatenisAPIClientPHP/zipball/e6ac3e3af19d0fb703a155b6d12966af0edb0009",
-                "reference": "e6ac3e3af19d0fb703a155b6d12966af0edb0009",
+                "url": "https://api.github.com/repos/blockchainofthings/CatenisAPIClientPHP/zipball/e7ad821843e0b0048d860088e454e40952a08b09",
+                "reference": "e7ad821843e0b0048d860088e454e40952a08b09",
                 "shasum": ""
             },
             "require": {
@@ -51,7 +51,7 @@
                 }
             ],
             "description": "Catenis Enterprise API client library for PHP",
-            "time": "2019-06-10T13:50:11+00:00"
+            "time": "2019-06-18T18:32:44+00:00"
         },
         {
             "name": "clue/buzz-react",
