@@ -330,7 +330,7 @@
     function callApiMethod(methodName, methodParams, cb) {
         jQuery.post(context.ctn_api_proxy_obj.ajax_url, {
             _ajax_nonce: context.ctn_api_proxy_obj.nonce,
-            action: "call_api_method",
+            action: "ctn_call_api_method",
             post_id: context.ctn_api_proxy_obj.post_id,
             client_uid: context.ctn_api_proxy_obj.client_uid,
             method_name: methodName,
@@ -377,7 +377,7 @@
         if (!this.apiProxy._getWsNotifyChannel(this.channelId)) {
             jQuery.post(context.ctn_api_proxy_obj.ajax_url, {
                 _ajax_nonce: context.ctn_api_proxy_obj.nonce,
-                action: "open_notify_channel",
+                action: "ctn_open_notify_channel",
                 post_id: context.ctn_api_proxy_obj.post_id,
                 client_uid: context.ctn_api_proxy_obj.client_uid,
                 channel_id: this.channelId,
@@ -411,7 +411,7 @@
     WsNotifyChannel.prototype.close = function (callback) {
         jQuery.post(context.ctn_api_proxy_obj.ajax_url, {
             _ajax_nonce: context.ctn_api_proxy_obj.nonce,
-            action: "close_notify_channel",
+            action: "ctn_close_notify_channel",
             post_id: context.ctn_api_proxy_obj.post_id,
             client_uid: context.ctn_api_proxy_obj.client_uid,
             channel_id: this.channelId

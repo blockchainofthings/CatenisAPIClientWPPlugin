@@ -140,13 +140,13 @@ class ApiClient
         add_action("in_plugin_update_message-$this->pluginBaseName", [$this, 'showUpgradeNotice'], 10, 2);
 
         // Setup AJAX methods
-        add_action('wp_ajax_call_api_method', [$this, 'callApiMethod']);
-        add_action('wp_ajax_open_notify_channel', [$this, 'openNotifyChannel']);
-        add_action('wp_ajax_close_notify_channel', [$this, 'closeNotifyChannel']);
+        add_action('wp_ajax_ctn_call_api_method', [$this, 'callApiMethod']);
+        add_action('wp_ajax_ctn_open_notify_channel', [$this, 'openNotifyChannel']);
+        add_action('wp_ajax_ctn_close_notify_channel', [$this, 'closeNotifyChannel']);
         // Note: the following is required so non-logged-in users can execute the Ajax call
-        add_action('wp_ajax_nopriv_call_api_method', [$this, 'callApiMethod']);
-        add_action('wp_ajax_nopriv_open_notify_channel', [$this, 'openNotifyChannel']);
-        add_action('wp_ajax_nopriv_close_notify_channel', [$this, 'closeNotifyChannel']);
+        add_action('wp_ajax_nopriv_ctn_call_api_method', [$this, 'callApiMethod']);
+        add_action('wp_ajax_nopriv_ctn_open_notify_channel', [$this, 'openNotifyChannel']);
+        add_action('wp_ajax_nopriv_ctn_close_notify_channel', [$this, 'closeNotifyChannel']);
 
         // Prepare for receiving heartbeat
         add_filter('heartbeat_settings', [$this, 'setHeartbeatInterval'], 10, 1);
