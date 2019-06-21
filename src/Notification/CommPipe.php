@@ -74,11 +74,18 @@ class CommPipe
         if (!file_exists($this->inputFifoPath)) {
             if ($createPipes) {
                 if (!posix_mkfifo($this->inputFifoPath, 0600)) {
-                    throw new Exception(sprintf(
-                        'Error creating communication input fifo (%s): %s',
-                        $this->inputFifoPath,
-                        posix_strerror(posix_get_last_error())
-                    ));
+                    // Make sure that it has not failed because file already exists (errno = 17 (EEXIST))
+                    $lastError = posix_get_last_error();
+
+                    if ($lastError != 17) {
+                        throw new Exception(sprintf(
+                            'Error creating communication input fifo (%s): %s',
+                            $this->inputFifoPath,
+                            posix_strerror($lastError)
+                        ));
+                    } else {
+                        $this->inputFifoDidNotExist = false;
+                    }
                 }
             }
         } else {
@@ -90,13 +97,20 @@ class CommPipe
         if (!file_exists($this->outputFifoPath)) {
             if ($createPipes) {
                 if (!posix_mkfifo($this->outputFifoPath, 0600)) {
-                    // Delete other fifo to be consistent
-                    @unlink($this->inputFifoPath);
-                    throw new Exception(sprintf(
-                        'Error creating communication output fifo (%s): %s',
-                        $this->outputFifoPath,
-                        posix_strerror(posix_get_last_error())
-                    ));
+                    // Make sure that it has not failed because file already exists (errno = 17 (EEXIST))
+                    $lastError = posix_get_last_error();
+
+                    if ($lastError != 17) {
+                        // Delete other fifo to be consistent
+                        @unlink($this->inputFifoPath);
+                        throw new Exception(sprintf(
+                            'Error creating communication output fifo (%s): %s',
+                            $this->outputFifoPath,
+                            posix_strerror($lastError)
+                        ));
+                    } else {
+                        $this->outputFifoDidNotExist = false;
+                    }
                 }
             }
         } else {
