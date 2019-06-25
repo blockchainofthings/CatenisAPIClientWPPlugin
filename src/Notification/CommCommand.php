@@ -217,11 +217,13 @@ class CommCommand implements EventEmitterInterface
     }
 
     /**
+     * @param int $timeoutSec - Seconds component of timeout for waiting on data to receive
+     * @param int $timeoutUSec - Microseconds component of timeout for waiting on data to receive
      * @throws Exception
      */
-    public function receive()
+    public function receive($timeoutSec = 0, $timeoutUSec = 0)
     {
-        $this->parseCommands($this->commPipe->receive());
+        $this->parseCommands($this->commPipe->receive($timeoutSec, $timeoutUSec));
 
         return $this->hasReceivedCommand();
     }

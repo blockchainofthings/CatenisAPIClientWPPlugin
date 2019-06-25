@@ -316,15 +316,37 @@
     };
 
     ApiProxy.prototype._setWsNotifyChannel = function (wsNotifyChannel) {
+        if (Object.keys(this.channelIdWsNotifyChannel).length === 0) {
+            // No notification channels previously open. Start polling server
+            startPollingServer();
+        }
+
         this.channelIdWsNotifyChannel[wsNotifyChannel.channelId] = wsNotifyChannel;
     }
 
     ApiProxy.prototype._clearWsNotifyChannel = function (wsNotifyChannel) {
         delete this.channelIdWsNotifyChannel[wsNotifyChannel.channelId];
+
+        if (Object.keys(this.channelIdWsNotifyChannel).length === 0) {
+            // No more notification channels open. Stop polling server
+            stopPollingServer();
+        }
     }
 
     ApiProxy.prototype._getWsNotifyChannel = function (channelId) {
         return this.channelIdWsNotifyChannel[channelId];
+    }
+
+    ApiProxy.prototype._closeAllNotifyChannels = function () {
+        var _self = this;
+
+        Object.keys(this.channelIdWsNotifyChannel).forEach(function (channelId) {
+            var wsNotifyChannel = _self.channelIdWsNotifyChannel[channelId];
+
+            wsNotifyChannel.close(function () {});
+
+            _self._clearWsNotifyChannel(wsNotifyChannel);
+        });
     }
 
     function callApiMethod(methodName, methodParams, cb) {
@@ -412,7 +434,6 @@
         jQuery.post(context.ctn_api_proxy_obj.ajax_url, {
             _ajax_nonce: context.ctn_api_proxy_obj.nonce,
             action: "ctn_close_notify_channel",
-            post_id: context.ctn_api_proxy_obj.post_id,
             client_uid: context.ctn_api_proxy_obj.client_uid,
             channel_id: this.channelId
         }, function (data) {
@@ -439,6 +460,74 @@
         });
     }
 
+    function pollServer(cb) {
+        jQuery.post(context.ctn_api_proxy_obj.ajax_url, {
+            _ajax_nonce: context.ctn_api_proxy_obj.nonce,
+            action: "ctn_poll_server",
+            client_uid: context.ctn_api_proxy_obj.client_uid
+        }, function (data) {
+            // Success
+            cb(undefined, data.data);
+        }, 'json')
+        .fail(function (jqXHR, textStatus, errorThrown) {
+            // Failure
+            var errMessage;
+
+            console.log('JSON response:', jqXHR.responseJSON);
+            console.log('Error thrown:', errorThrown);
+
+            if (jqXHR.status >= 100) {
+                errMessage = '[' + jqXHR.status + '] - ' + (typeof jqXHR.responseJSON === 'object' && jqXHR.responseJSON !== null && jqXHR.responseJSON.data
+                    ? (typeof jqXHR.responseJSON.data === 'string' ? jqXHR.responseJSON.data : (typeof jqXHR.responseJSON.data === 'object'
+                    && jqXHR.responseJSON.data !== null && typeof jqXHR.responseJSON.data.message === 'string' ? jqXHR.responseJSON.data.message : jqXHR.statusText))
+                    : jqXHR.statusText);
+            } else {
+                errMessage = 'Ajax client error' + (textStatus ? ' (' + textStatus + ')' : '') + (errorThrown ? ': ' + errorThrown : '');
+            }
+
+            // Display returned error
+            console.log(errMessage);
+            cb(new Error(errMessage));
+        });
+    }
+
+    var pollingServer = false;
+
+    function startPollingServer() {
+        function doPollServer() {
+            pollServer(function (error, result) {
+                if (error) {
+                    // Error polling server. Stop polling server, close all currently open
+                    //  notification channels, and emit error event from ApiProxy object
+                    pollingServer = false;
+                    context.ctnApiProxy._closeAllNotifyChannels();
+                    context.ctnApiProxy.emitEvent('comm-error', [error]);
+                }
+                else {
+                    if (result.notifyCommands) {
+                        result.notifyCommands.forEach(function (command) {
+                            processNotifyCommand(command);
+                        });
+                    }
+                }
+
+                if (pollingServer) {
+                    setImmediate(doPollServer);
+                }
+            });
+        }
+
+        if (!pollingServer) {
+            pollingServer = true;
+
+            doPollServer();
+        }
+    }
+
+    function stopPollingServer() {
+        pollingServer = false;
+    }
+
     function random(length) {
         var validChars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
         var numChars = validChars.length;
@@ -463,86 +552,54 @@
         return result;
     }
 
-    context.ctnApiProxy = new ApiProxy();
+    function processNotifyCommand(command) {
+        var channelId = command.data.channelId;
 
-    jQuery(document).ready(function () {
-        jQuery(document).on('heartbeat-send', function (event, data) {
-            // Send client UID
-            data['catenis-api-client_client_uid'] = context.ctn_api_proxy_obj.client_uid;
-        });
+        // Retrieve notification channel instance
+        wsNotifyChannel = context.ctnApiProxy._getWsNotifyChannel(channelId);
 
-        jQuery(document).on('heartbeat-tick', function (event, data) {
-            if (!('catenis-api-client_response' in data)) {
-                // No response from Catenis API Client plugin back-end. Just return
-                return;
-            }
-            
-            var ctn_api_client_response = data['catenis-api-client_response'];
+        if (wsNotifyChannel) {
+            if (command) {
+                switch (command.cmd) {
+                    case 'notification':
+                        // Emit corresponding event from notification channel instance object
+                        wsNotifyChannel.emitEvent('notify', [command.data.eventData]);
+                        break;
 
-            // Process returned data
-            if (!('success' in ctn_api_client_response)) {
-                console.error('Missing required ctn_api_client_response field from heartbeat response');
-                return;
-            }
-
-            if (!ctn_api_client_response.success) {
-                // Error heartbeat response. Emit error event from ApiProxy object
-                context.ctnApiProxy.emitEvent('comm-error', [ctn_api_client_response.error]);
-            }
-            else {
-                // Success heartbeat response. Look for notification process commands returned
-                if ('notifyCommands' in ctn_api_client_response) {
-                    ctn_api_client_response.notifyCommands.split('|').forEach(function (jsonCommand) {
-                        var command = JSON.parse(jsonCommand);
-                        var channelId = command.data.channelId;
-
-                        // Retrieve notification channel instance
-                        wsNotifyChannel = context.ctnApiProxy._getWsNotifyChannel(channelId);
-
-                        if (wsNotifyChannel) {
-                            if (command) {
-                                switch (command.cmd) {
-                                    case 'notification':
-                                        // Emit corresponding event from notification channel instance object
-                                        wsNotifyChannel.emitEvent('notify', [command.data.eventData]);
-                                        break;
-    
-                                    case 'notify_channel_opened':
-                                        var eventData;
-                                        
-                                        if (command.data.error) {
-                                            // Error opening notification channel. Clear notification channel
-                                            //  instance and prepare to return error
-                                            context.ctnApiProxy._clearWsNotifyChannel(wsNotifyChannel);
-                                            eventData = [command.data.error];
-                                        }
-
-                                        // Emit corresponding event from notification channel instance object
-                                        wsNotifyChannel.emitEvent('open', eventData);
-                                        break;
-    
-                                    case 'notify_channel_error':
-                                        // Emit corresponding event from notification channel instance object
-                                        wsNotifyChannel.emitEvent('error', [command.data.error]);
-                                        break;
-    
-                                    case 'notify_channel_closed':
-                                        // Notification channel has been closed. Clear notification channel instance
-                                        context.ctnApiProxy._clearWsNotifyChannel(wsNotifyChannel);
-
-                                        // Emit corresponding event from notification channel instance object
-                                        wsNotifyChannel.emitEvent('close', [command.data.code, command.data.reason]);
-                                        break;
-                                }
-                            }
+                    case 'notify_channel_opened':
+                        var eventData;
+                        
+                        if (command.data.error) {
+                            // Error opening notification channel. Clear notification channel
+                            //  instance and prepare to return error
+                            context.ctnApiProxy._clearWsNotifyChannel(wsNotifyChannel);
+                            eventData = [command.data.error];
                         }
-                    });
+
+                        // Emit corresponding event from notification channel instance object
+                        wsNotifyChannel.emitEvent('open', [eventData]);
+                        break;
+
+                    case 'notify_channel_error':
+                        // Emit corresponding event from notification channel instance object
+                        wsNotifyChannel.emitEvent('error', [command.data.error]);
+                        break;
+
+                    case 'notify_channel_closed':
+                        // Notification channel has been closed. Clear notification channel instance
+                        context.ctnApiProxy._clearWsNotifyChannel(wsNotifyChannel);
+
+                        // Emit corresponding event from notification channel instance object
+                        wsNotifyChannel.emitEvent('close', [command.data.code, command.data.reason]);
+                        break;
+
+                    default:
+                        console.error('Unexpected command from notification process:', command.cmd);
+                        break;
                 }
             }
-        });
+        }
+    }
 
-        jQuery(document).on('heartbeat-error', function(event, jqXHR, textStatus, error) {
-            console.error('Heartbeat error: ' + (error ? error : textStatus));
-        });
-    });
+    context.ctnApiProxy = new ApiProxy();
 })(this);

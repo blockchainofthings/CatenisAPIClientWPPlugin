@@ -7,6 +7,7 @@ namespace Catenis\WP\Notification;
 
 use Exception;
 use DateTime;
+use Catenis\WP\React\EventLoop\Factory;
 use Catenis\WP\React\EventLoop\LoopInterface;
 use Catenis\WP\React\Stream\ReadableResourceStream;
 use Catenis\WP\Catenis\ApiClient as CatenisApiClient;
@@ -23,6 +24,7 @@ class NotificationCtrl
     private $isParentAlive = false;
     private $ctnApiClient;
     private $wsNofifyChannels = [];
+    private $pendingCommands = [];
 
     private static $logLevels = [
         'ERROR' => 10,
@@ -107,29 +109,6 @@ class NotificationCtrl
         $this->terminate('Parent process stopped responding');
     }
 
-    private function terminate($reason = '', $exitCode = 0)
-    {
-        global $EXIT_CODE;
-
-        // Stop event loop and delete communication pipes before terminating process
-        if ($this->checkParentAliveTimer) {
-            $this->eventLoop->cancelTimer($this->checkParentAliveTimer);
-        }
-
-        $this->eventLoop->stop();
-        $this->commPipe->delete();
-
-        if (!empty($reason)) {
-            if ($exitCode !== 0) {
-                self::logError('Terminated: ' . $reason);
-            } else {
-                self::logInfo('Terminated: ' . $reason);
-            }
-        }
-
-        $EXIT_CODE = $exitCode;
-    }
-
     private function processCommands()
     {
         while ($this->commCommand->hasReceivedCommand()) {
@@ -155,6 +134,28 @@ class NotificationCtrl
 
                 default:
                     self::logDebug('Unknown communication command received: ' . $commandType);
+            }
+        }
+    }
+
+    private function hasPendingCommands()
+    {
+        return !empty($this->pendingCommands);
+    }
+
+    private function processPendingCommands()
+    {
+        while (($command = array_shift($this->pendingCommands)) !== null) {
+            self::logDebug('Process pending command: ' . print_r($command, true));
+
+            switch (($commandType = CommCommand::commandType($command))) {
+                case CommCommand::OPEN_NOTIFY_CHANNEL_CMD:
+                    $this->processOpenNotifyChannelCommand($command);
+                    break;
+
+                case CommCommand::CLOSE_NOTIFY_CHANNEL_CMD:
+                    $this->processCloseNotifyChannelCommand($command);
+                    break;
             }
         }
     }
@@ -203,6 +204,10 @@ class NotificationCtrl
             // Error sending init response. Terminate process
             $this->terminate('Error sending init response: ' . $ex->getMessage(), -4);
         }
+
+        if ($this->hasPendingCommands()) {
+            $this->processPendingCommands();
+        }
     }
 
     private function processOpenNotifyChannelCommand($command)
@@ -239,6 +244,11 @@ class NotificationCtrl
                     }
                 }
             });
+        } else {
+            // Notification process not yet initialized. Save command
+            //  to be processed afterwards
+            self::logDebug('Pending command: ' . print_r($command, true));
+            $this->pendingCommands[] = $command;
         }
     }
 
@@ -251,6 +261,11 @@ class NotificationCtrl
             if (isset($this->wsNofifyChannels[$channelId])) {
                 $this->wsNofifyChannels[$channelId]->close();
             }
+        } else {
+            // Notification process not yet initialized. Save command
+            //  to be processed afterwards
+            self::logDebug('Pending command: ' . print_r($command, true));
+            $this->pendingCommands[] = $command;
         }
     }
 
@@ -304,14 +319,13 @@ class NotificationCtrl
     /**
      * NotificationCtrl constructor.
      * @param string $clientUID
-     * @param LoopInterface $loop - Event loop
+     * @param mixed - Event loop
      * @param int $keepAliveInterval - Time (in seconds) for continuously checking whether parent process is still alive
      * @throws Exception
      */
-    public function __construct($clientUID, LoopInterface $loop, $keepAliveInterval = 120)
+    public function __construct($clientUID, &$loop, $keepAliveInterval = 120)
     {
         $this->clientUID = $clientUID;
-        $this->eventLoop = $loop;
 
         try {
             $this->commPipe = new CommPipe($clientUID, false);
@@ -319,14 +333,30 @@ class NotificationCtrl
             throw new Exception('Error opening communication pipe: ' . $ex->getMessage());
         }
 
-        $this->inputPipeStream = new ReadableResourceStream($this->commPipe->getInputPipe(), $loop);
-        $this->commCommand = new CommCommand($this->commPipe);
+        try {
+            // Create event loop
+            $this->eventLoop = $loop = Factory::create();
+
+            $this->inputPipeStream = new ReadableResourceStream($this->commPipe->getInputPipe(), $loop);
+            $this->commCommand = new CommCommand($this->commPipe);
+        } catch (Exception $ex) {
+            // Make sure that communication pipes are deleted
+            $this->terminate();
+            throw new Exception('Error setting up communication pipe: ' . $ex->getMessage());
+        }
 
         // Wire up event to read command from input pipe
         $this->inputPipeStream->on('data', [$this, 'receiveCommand']);
 
         // Start timer to check if parent process is still alive
         $this->checkParentAliveTimer = $loop->addPeriodicTimer($keepAliveInterval, [$this, 'checkParentAlive']);
+
+        // Set up handler to process signals to end process
+        pcntl_signal(SIGHUP, [$this, 'endProcSignalHandler']);
+        pcntl_signal(SIGINT, [$this, 'endProcSignalHandler']);
+        pcntl_signal(SIGQUIT, [$this, 'endProcSignalHandler']);
+        pcntl_signal(SIGABRT, [$this, 'endProcSignalHandler']);
+        pcntl_signal(SIGTERM, [$this, 'endProcSignalHandler']);
     }
 
     public function receiveCommand($data)
@@ -346,5 +376,60 @@ class NotificationCtrl
         } else {
             $this->resetParentAlive();
         }
+    }
+
+    public function endProcSignalHandler($signo)
+    {
+        switch ($signo) {
+            case SIGHUP:
+                $sigName = 'SIGHUP';
+                break;
+
+            case SIGINT:
+                $sigName = 'SIGINT';
+                break;
+
+            case SIGQUIT:
+                $sigName = 'SIGQUIT';
+                break;
+
+            case SIGABRT:
+                $sigName = 'SIGABRT';
+                break;
+
+            case SIGTERM:
+                $sigName = 'SIGTERM';
+                break;
+        }
+
+        // A signal to end the process has been received. So terminate the process appropriately
+        $this->terminate("Process forced to end: $sigName ($signo) received", -6);
+    }
+
+    public function terminate($reason = '', $exitCode = 0)
+    {
+        global $EXIT_CODE;
+
+        if ($this->eventLoop) {
+            // Stop event loop
+            if ($this->checkParentAliveTimer) {
+                $this->eventLoop->cancelTimer($this->checkParentAliveTimer);
+            }
+
+            $this->eventLoop->stop();
+        }
+
+        // Delete communication pipes
+        $this->commPipe->delete();
+
+        if (!empty($reason)) {
+            if ($exitCode !== 0) {
+                self::logError('Terminated: ' . $reason);
+            } else {
+                self::logInfo('Terminated: ' . $reason);
+            }
+        }
+
+        $EXIT_CODE = $exitCode;
     }
 }

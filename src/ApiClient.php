@@ -11,7 +11,7 @@ use Catenis\WP\Notification\CommCommand;
 
 class ApiClient
 {
-    private static $heartbeatInterval = 15;     // 15 seconds
+    private static $pollServerTimeout = 30;    // 30 sec. (in seconds)
 
     private $pluginPath;
     private $pluginBaseName;
@@ -143,15 +143,12 @@ class ApiClient
         add_action('wp_ajax_ctn_call_api_method', [$this, 'callApiMethod']);
         add_action('wp_ajax_ctn_open_notify_channel', [$this, 'openNotifyChannel']);
         add_action('wp_ajax_ctn_close_notify_channel', [$this, 'closeNotifyChannel']);
+        add_action('wp_ajax_ctn_poll_server', [$this, 'processServerPolling']);
         // Note: the following is required so non-logged-in users can execute the Ajax call
         add_action('wp_ajax_nopriv_ctn_call_api_method', [$this, 'callApiMethod']);
         add_action('wp_ajax_nopriv_ctn_open_notify_channel', [$this, 'openNotifyChannel']);
         add_action('wp_ajax_nopriv_ctn_close_notify_channel', [$this, 'closeNotifyChannel']);
-
-        // Prepare for receiving heartbeat
-        add_filter('heartbeat_settings', [$this, 'setHeartbeatInterval'], 10, 1);
-        add_filter('heartbeat_received', [$this, 'processHeartbeat'], 10, 2);
-        add_filter('heartbeat_nopriv_received', [$this, 'processHeartbeat'], 10, 2);
+        add_action('wp_ajax_nopriv_ctn_poll_server', [$this, 'processServerPolling']);
     }
 
     public function activate()
@@ -180,13 +177,29 @@ class ApiClient
 
             if (!empty($postMetadata['ctn_load_client']) && $postMetadata['ctn_load_client'] === 'on') {
                 // Register JavaScript modules it depends on
-                wp_register_script('heir', plugins_url('/js/lib/heir.js', $this->pluginPath));
-                wp_register_script('event_emitter', plugins_url('/js/lib/EventEmitter.min.js', $this->pluginPath));
+                wp_register_script(
+                    'heir',
+                    plugins_url('/js/lib/heir.js', $this->pluginPath),
+                    [],
+                    '2.0.0'
+                );
+                wp_register_script(
+                    'event_emitter',
+                    plugins_url('/js/lib/EventEmitter.min.js', $this->pluginPath),
+                    [],
+                    '4.2.11'
+                );
+                wp_register_script(
+                    'setImmediate',
+                    plugins_url('/js/lib/setImmediate.min.js', $this->pluginPath),
+                    [],
+                    '1.0.5'
+                );
 
                 wp_enqueue_script(
                     'ctn_api_proxy',
                     plugins_url('/js/CatenisApiProxy.js', $this->pluginPath),
-                    ['jquery', 'heir', 'event_emitter']
+                    ['jquery', 'heir', 'event_emitter', 'setImmediate']
                 );
 
                 try {
@@ -205,9 +218,6 @@ class ApiClient
                         'client_uid' => $clientUID
                     ]
                 );
-
-                // Activate heartbeat API
-                wp_enqueue_script('heartbeat');
             }
         }
     }
@@ -527,7 +537,8 @@ class ApiClient
             $errorMsg = '';
 
             try {
-                if ($commCommand->receive()) {
+                // Check for received data specifying a 5 seconds timeout
+                if ($commCommand->receive(5)) {
                     $command = $commCommand->getNextCommand();
 
                     if (($commandType = CommCommand::commandType($command)) !== CommCommand::INIT_RESPONSE_CMD) {
@@ -579,8 +590,7 @@ class ApiClient
             wp_send_json_error('Error opening communication pipe: ' . $ex->getMessage(), 500);
         }
 
-        // Make sure that communication pipes exist. If they do not, assume that
-        //  notification channel is already closed and do nothing
+        // Make sure that communication pipes exist
         if ($commPipe->pipesExist()) {
             $commCommand = new CommCommand($commPipe);
 
@@ -599,46 +609,28 @@ class ApiClient
         wp_send_json_success();
     }
 
-    public function setHeartbeatInterval($settings)
+    public function processServerPolling()
     {
-        $settings['interval'] = self::$heartbeatInterval;
-        return $settings;
-    }
+        check_ajax_referer(__FILE__);
 
-    public function processHeartbeat($response, $data)
-    {
-        if (!array_key_exists('catenis-api-client_client_uid', $data)) {
-            // No data from Catenis API Client plugin front-end. Just return
-            return $response;
-        }
-
-        $ctn_api_client_response = [];
-        $clientUID = $data['catenis-api-client_client_uid'];
+        $clientUID = $_POST['client_uid'];
 
         if (!$clientUID) {
-            // Return error
-            $ctn_api_client_response['success'] = false;
-            $ctn_api_client_response['error'] = 'Missing client UID';
-
-            $response['catenis-api-client_response'] = $ctn_api_client_response;
-
-            return $response;
+            wp_send_json_error('Missing client UID', 500);
         }
+
+        $response = [
+            'notifyCommands' => null
+        ];
 
         try {
             $commPipe = new CommPipe($clientUID, true);
         } catch (Exception $ex) {
             // Return error
-            $ctn_api_client_response['success'] = false;
-            $ctn_api_client_response['error'] = 'Error opening communication pipe: ' . $ex->getMessage();
-
-            $response['catenis-api-client_response'] = $ctn_api_client_response;
-
-            return $response;
+            wp_send_json_error('Error opening communication pipe: ' . $ex->getMessage(), 500);
         }
 
-        // Make sure that communication pipes exist. If they do not, assume that
-        //  notification channel is not yet open and do nothing
+        // Make sure that communication pipes exist
         if ($commPipe->pipesExist()) {
             $commCommand = new CommCommand($commPipe);
 
@@ -647,53 +639,36 @@ class ApiClient
                 $commCommand->sendPingCommand();
             } catch (Exception $ex) {
                 // Return error
-                $ctn_api_client_response['success'] = false;
-                $ctn_api_client_response['error'] = 'Error sending ping command: ' . $ex->getMessage();
-
-                $response['catenis-api-client_response'] = $ctn_api_client_response;
-
-                return $response;
+                wp_send_json_error('Error sending ping command: ' . $ex->getMessage(), 500);
             }
 
             // Retrieve received commands
             $notifyProcCommands = [];
 
             try {
-                if ($commCommand->receive()) {
+                if ($commCommand->receive(self::$pollServerTimeout)) {
                     do {
-                        $notifyProcCommands[] = json_encode(
-                            $commCommand->getNextCommand(),
-                            JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES
-                        );
+                        $notifyProcCommands[] = $commCommand->getNextCommand();
                     } while ($commCommand->hasReceivedCommand());
                 }
             } catch (Exception $ex) {
                 // Return error
-                $ctn_api_client_response['success'] = false;
-                $ctn_api_client_response['error'] = 'Error while retrieving response from notification process: '
-                    . $ex->getMessage();
-
-                $response['catenis-api-client_response'] = $ctn_api_client_response;
-
-                return $response;
+                wp_send_json_error('Error while retrieving response from notification process: '
+                    . $ex->getMessage(), 500);
             }
-
-            // Prepare to return indicating success
-            $ctn_api_client_response['success'] = true;
 
             if (!empty($notifyProcCommands)) {
                 // Add notification process commands to response
-                $ctn_api_client_response['notifyCommands'] = implode('|', $notifyProcCommands);
+                $response['notifyCommands'] = $notifyProcCommands;
             }
 
             $commPipe->close();
         } else {
-            // Notification channel not yet open. Just return indicating success
-            $ctn_api_client_response['success'] = true;
+            // Communication pipes not available. Return error indicating that
+            //  notification process is not running
+            wp_send_json_error('Notification process is not running', 503);
         }
 
-        $response['catenis-api-client_response'] = $ctn_api_client_response;
-
-        return $response;
+        wp_send_json_success($response);
     }
 }

@@ -196,54 +196,40 @@ class CommPipe
     }
 
     /**
-     * @param int $timeout - Timeout (in seconds) for waiting on data to receive
+     * @param int $timeoutSec - Seconds component of timeout for waiting on data to receive
+     * @param int $timeoutUSec - Microseconds component of timeout for waiting on data to receive
      * @return string - The data read
      * @throws Exception
      */
-    public function receive($timeout = 5)
+    public function receive($timeoutSec = 0, $timeoutUSec = 0)
     {
         if (!$this->inputFifo) {
             throw new Exception('Cannot receive data; input pipe not open');
         }
 
-        $waitTimeout = 500000; // (0.5 sec) in microseconds
-        $errorMsg = '';
-        $dataReady = false;
+        $read = [$this->inputFifo];
+        $write = null;
+        $except = null;
 
-        do {
-            $read = [$this->inputFifo];
-            $write = null;
-            $except = null;
+        $result = stream_select($read, $write, $except, $timeoutSec, $timeoutUSec);
 
-            $result = stream_select($read, $write, $except, 0, $waitTimeout);
-
-            if ($result === false) {
-                $errorMsg = error_get_last()['message'];
-            } elseif ($result > 0) {
-                $dataReady = true;
-            }
-
-            $timeout -= $waitTimeout * 0.000001;
-        } while (!$dataReady && $timeout > 0 && empty($errorMsg));
-
-        if (!empty($errorMsg)) {
-            throw new Exception('Error waiting on input pipe to receive data: ' . $errorMsg);
-        } elseif ($dataReady) {
-            // Data available. Read it
-            $data = '';
-
-            do {
-                $dataRead = fread($this->inputFifo, 1024);
-
-                if ($dataRead === false) {
-                    throw new Exception('Error reading data from pipe: ' . error_get_last()['message']);
-                }
-
-                $data .= $dataRead;
-            } while (strlen($dataRead) > 0);
+        if ($result === false) {
+            throw new Exception('Error waiting on input pipe to receive data: ' . error_get_last()['message']);
         } else {
-            // No data available
             $data = '';
+
+            if ($result > 0) {
+                // Data available. Read it
+                do {
+                    $dataRead = fread($this->inputFifo, 1024);
+    
+                    if ($dataRead === false) {
+                        throw new Exception('Error reading data from pipe: ' . error_get_last()['message']);
+                    }
+    
+                    $data .= $dataRead;
+                } while (strlen($dataRead) > 0);
+            }
         }
         
         return $data;
@@ -251,41 +237,29 @@ class CommPipe
 
     /**
      * @param string $data - Data to send
-     * @param int $timeout - Timeout (in seconds) for waiting for pipe to be ready to send data
+     * @param int $timeoutSec - Seconds component of timeout for waiting for pipe to be ready to send data
+     * @param int $timeoutUSec - Microseconds component of timeout for waiting for pipe to be ready to send data
      * @throws Exception
      */
-    public function send($data, $timeout = 15)
+    public function send($data, $timeoutSec = 15, $timeoutUSec = 0)
     {
         if (!$this->outputFifo) {
             throw new Exception('Cannot send data; output pipe not open');
         }
 
-        $waitTimeout = 500000; // (0.5 sec) in microseconds
-        $errorMsg = '';
-        $pipeReady = false;
         $dataLength = strlen($data);
         $bytesToSend = $dataLength;
 
         do {
-            do {
-                $read = null;
-                $write = [$this->outputFifo];
-                $except = null;
+            $read = null;
+            $write = [$this->outputFifo];
+            $except = null;
 
-                $result = stream_select($read, $write, $except, 0, $waitTimeout);
+            $result = stream_select($read, $write, $except, $timeoutSec, $timeoutUSec);
 
-                if ($result === false) {
-                    $errorMsg = error_get_last()['message'];
-                } elseif ($result > 0) {
-                    $pipeReady = true;
-                }
-
-                $timeout -= $waitTimeout * 0.000001;
-            } while (!$pipeReady && $timeout > 0 && empty($errorMsg));
-
-            if (!empty($errorMsg)) {
-                throw new Exception('Error waiting on output pipe to send data: ' . $errorMsg);
-            } elseif ($pipeReady) {
+            if ($result === false) {
+                throw new Exception('Error waiting on output pipe to send data: ' . error_get_last()['message']);
+            } elseif ($result > 0) {
                 // Pipe ready. Send data
                 $bytesSent = fwrite($this->outputFifo, $data);
 
