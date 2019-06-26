@@ -8,7 +8,7 @@ require_once __DIR__ . '/../../thirdparty/autoload.php';
 use Catenis\WP\Notification\NotificationCtrl;
 
 $LOGGING = true;
-$LOG_LEVEL = 'TRACE';
+$LOG_LEVEL = 'INFO';
 $MAX_LOG_SIZE = 10 * 1024 * 1024;  // 10 MB
 
 if ($LOGGING) {
