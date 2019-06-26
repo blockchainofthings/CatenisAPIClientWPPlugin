@@ -42,6 +42,12 @@ Errors that take place while calling the Catenis API methods are returned as sta
 
 == Installation ==
 
+= System requirements =
+
+The PHP executable should be in the system PATH so that the plugin can spawn the process used to handle notifications.
+
+= Installation procedure =
+
 1. Upload the plugin files to the "/wp-content/plugins/" directory.
 1. Activate the plugin through the "Plugins" menu in WordPress.
 1. Go to "Settings" | "Catenis API Client" to configure the global settings for instantiating the Catenis API client.
