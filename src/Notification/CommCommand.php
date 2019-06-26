@@ -14,11 +14,14 @@ class CommCommand implements EventEmitterInterface
 {
     use EventEmitterTrait;
 
+    // Control commands
     const INIT_CMD = 'init';
     const PING_CMD = 'ping';
+    const INIT_RESPONSE_CMD = 'init_response';
+
+    // Regular (notification) commands
     const OPEN_NOTIFY_CHANNEL_CMD = 'open_notify_channel';
     const CLOSE_NOTIFY_CHANNEL_CMD = 'close_notify_channel';
-    const INIT_RESPONSE_CMD = 'init_response';
     const NOTIFICATION_CMD = 'notification';
     const NOTIFY_CHANNEL_OPENED_CMD = 'notify_channel_opened';
     const NOTIFY_CHANNEL_ERROR_CMD = 'notify_channel_error';
@@ -28,6 +31,7 @@ class CommCommand implements EventEmitterInterface
 
     private $commPipe;
     private $receivedCommands;
+    private $receivedCtrlCommands;
 
     /**
      * @param $command
@@ -50,6 +54,27 @@ class CommCommand implements EventEmitterInterface
         ));
     }
 
+    /**
+     * @param $command
+     * @param mixed|null $data
+     * @throws Exception
+     */
+    private function sendControlCommand($command, $data = null)
+    {
+        $cmdObj = new stdClass();
+
+        $cmdObj->cmd = $command;
+
+        if (!empty($data)) {
+            $cmdObj->data = $data;
+        }
+
+        $this->commPipe->sendControl(self::$commandSeparator . json_encode(
+            $cmdObj,
+            JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES
+        ));
+    }
+
     public static function commandType(stdClass $command)
     {
         return !empty($command->cmd) && is_string($command->cmd) ? $command->cmd : '';
@@ -63,6 +88,7 @@ class CommCommand implements EventEmitterInterface
     {
         $this->commPipe = $commPipe;
         $this->receivedCommands = [];
+        $this->receivedCtrlCommands = [];
     }
 
     /**
@@ -71,7 +97,7 @@ class CommCommand implements EventEmitterInterface
      */
     public function sendInitCommand(stdClass $ctnClientData)
     {
-        $this->sendCommand(self::INIT_CMD, $ctnClientData);
+        $this->sendControlCommand(self::INIT_CMD, $ctnClientData);
     }
 
     /**
@@ -79,7 +105,24 @@ class CommCommand implements EventEmitterInterface
      */
     public function sendPingCommand()
     {
-        $this->sendCommand(self::PING_CMD);
+        $this->sendControlCommand(self::PING_CMD);
+    }
+
+    /**
+     * @param bool $success
+     * @param string|null $error
+     * @throws Exception
+     */
+    public function sendInitResponseCommand($success = true, $error = null)
+    {
+        $cmdData = new stdClass();
+        $cmdData->success = $success;
+
+        if (!$success && !empty($error)) {
+            $cmdData->error = $error;
+        }
+
+        $this->sendControlCommand(self::INIT_RESPONSE_CMD, $cmdData);
     }
 
     /**
@@ -104,23 +147,6 @@ class CommCommand implements EventEmitterInterface
         $this->sendCommand(self::CLOSE_NOTIFY_CHANNEL_CMD, [
             'channelId' => $channelId
         ]);
-    }
-
-    /**
-     * @param bool $success
-     * @param string|null $error
-     * @throws Exception
-     */
-    public function sendInitResponseCommand($success = true, $error = null)
-    {
-        $cmdData = new stdClass();
-        $cmdData->success = $success;
-
-        if (!$success && !empty($error)) {
-            $cmdData->error = $error;
-        }
-
-        $this->sendCommand(self::INIT_RESPONSE_CMD, $cmdData);
     }
 
     /**
@@ -197,17 +223,42 @@ class CommCommand implements EventEmitterInterface
                     if (!empty($command) && $command instanceof stdClass && !empty($command->cmd)
                             && is_string($command->cmd)) {
                         switch ($command->cmd) {
-                            case self::INIT_CMD:
-                            case self::PING_CMD:
                             case self::OPEN_NOTIFY_CHANNEL_CMD:
                             case self::CLOSE_NOTIFY_CHANNEL_CMD:
-                            case self::INIT_RESPONSE_CMD:
                             case self::NOTIFICATION_CMD:
                             case self::NOTIFY_CHANNEL_OPENED_CMD:
                             case self::NOTIFY_CHANNEL_ERROR_CMD:
                             case self::NOTIFY_CHANNEL_CLOSED_CMD:
                                 // Store received command
                                 $this->receivedCommands[] = $command;
+                                break;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * @param string $data
+     */
+    public function parseControlCommands($data)
+    {
+        if (is_string($data) && !empty($data)) {
+            $dataChunks = explode(self::$commandSeparator, $data);
+
+            foreach ($dataChunks as $idx => $jsonCmd) {
+                if (!empty($jsonCmd)) {
+                    $command = json_decode($jsonCmd);
+
+                    if (!empty($command) && $command instanceof stdClass && !empty($command->cmd)
+                            && is_string($command->cmd)) {
+                        switch ($command->cmd) {
+                            case self::INIT_CMD:
+                            case self::PING_CMD:
+                            case self::INIT_RESPONSE_CMD:
+                                // Store received command
+                                $this->receivedCtrlCommands[] = $command;
                                 break;
                         }
                     }
@@ -236,5 +287,27 @@ class CommCommand implements EventEmitterInterface
     public function getNextCommand()
     {
         return array_shift($this->receivedCommands);
+    }
+
+    /**
+     * @param int $timeoutSec - Seconds component of timeout for waiting on data to receive
+     * @param int $timeoutUSec - Microseconds component of timeout for waiting on data to receive
+     * @throws Exception
+     */
+    public function receiveControl($timeoutSec = 0, $timeoutUSec = 0)
+    {
+        $this->parseControlCommands($this->commPipe->receiveControl($timeoutSec, $timeoutUSec));
+
+        return $this->hasReceivedControlCommand();
+    }
+
+    public function hasReceivedControlCommand()
+    {
+        return !empty($this->receivedCtrlCommands);
+    }
+
+    public function getNextControlCommand()
+    {
+        return array_shift($this->receivedCtrlCommands);
     }
 }

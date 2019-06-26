@@ -11,6 +11,7 @@ use Catenis\WP\Notification\CommCommand;
 
 class ApiClient
 {
+    private static $initNtfyProcWaitRespTimeout = 1;    // 1 sec. (in seconds)
     private static $pollServerTimeout = 30;    // 30 sec. (in seconds)
 
     private $pluginPath;
@@ -506,7 +507,12 @@ class ApiClient
         }
 
         try {
-            $commPipe = new CommPipe($clientUID, true, CommPipe::SEND_COMM_MODE | CommPipe::RECEIVE_COMM_MODE, true);
+            $commPipe = new CommPipe(
+                $clientUID,
+                true,
+                CommPipe::SEND_COMM_MODE | CommPipe::SEND_COMM_CTRL_MODE | CommPipe::RECEIVE_COMM_CTRL_MODE,
+                true
+            );
         } catch (Exception $ex) {
             wp_send_json_error('Error opening communication pipe: ' . $ex->getMessage(), 500);
         }
@@ -537,9 +543,9 @@ class ApiClient
             $errorMsg = '';
 
             try {
-                // Check for received data specifying a 5 seconds timeout
-                if ($commCommand->receive(5)) {
-                    $command = $commCommand->getNextCommand();
+                // Check for received control data
+                if ($commCommand->receiveControl(self::$initNtfyProcWaitRespTimeout)) {
+                    $command = $commCommand->getNextControlCommand();
 
                     if (($commandType = CommCommand::commandType($command)) !== CommCommand::INIT_RESPONSE_CMD) {
                         $errorMsg = 'Unexpected response from notification process: ' . $commandType;
@@ -624,7 +630,7 @@ class ApiClient
         ];
 
         try {
-            $commPipe = new CommPipe($clientUID, true);
+            $commPipe = new CommPipe($clientUID, true, CommPipe::RECEIVE_COMM_MODE | CommPipe::SEND_COMM_CTRL_MODE);
         } catch (Exception $ex) {
             // Return error
             wp_send_json_error('Error opening communication pipe: ' . $ex->getMessage(), 500);

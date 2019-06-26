@@ -19,12 +19,12 @@ class NotificationCtrl
     private $eventLoop;
     private $commPipe;
     private $inputPipeStream;
+    private $inputCtrlPipeStream;
     private $checkParentAliveTimer;
     private $commCommand;
     private $isParentAlive = false;
     private $ctnApiClient;
     private $wsNofifyChannels = [];
-    private $pendingCommands = [];
 
     private static $logLevels = [
         'ERROR' => 10,
@@ -116,14 +116,6 @@ class NotificationCtrl
             self::logDebug('Process command: ' . print_r($command, true));
 
             switch (($commandType = CommCommand::commandType($command))) {
-                case CommCommand::INIT_CMD:
-                    $this->processInitCommand($command);
-                    break;
-
-                case CommCommand::PING_CMD:
-                    // Nothing to do
-                    break;
-
                 case CommCommand::OPEN_NOTIFY_CHANNEL_CMD:
                     $this->processOpenNotifyChannelCommand($command);
                     break;
@@ -138,24 +130,23 @@ class NotificationCtrl
         }
     }
 
-    private function hasPendingCommands()
+    private function processControlCommands()
     {
-        return !empty($this->pendingCommands);
-    }
-
-    private function processPendingCommands()
-    {
-        while (($command = array_shift($this->pendingCommands)) !== null) {
-            self::logDebug('Process pending command: ' . print_r($command, true));
+        while ($this->commCommand->hasReceivedControlCommand()) {
+            $command = $this->commCommand->getNextControlCommand();
+            self::logDebug('Process control command: ' . print_r($command, true));
 
             switch (($commandType = CommCommand::commandType($command))) {
-                case CommCommand::OPEN_NOTIFY_CHANNEL_CMD:
-                    $this->processOpenNotifyChannelCommand($command);
+                case CommCommand::INIT_CMD:
+                    $this->processInitCommand($command);
                     break;
 
-                case CommCommand::CLOSE_NOTIFY_CHANNEL_CMD:
-                    $this->processCloseNotifyChannelCommand($command);
+                case CommCommand::PING_CMD:
+                    // Nothing to do
                     break;
+
+                default:
+                    self::logDebug('Unknown communication control command received: ' . $commandType);
             }
         }
     }
@@ -205,9 +196,9 @@ class NotificationCtrl
             $this->terminate('Error sending init response: ' . $ex->getMessage(), -4);
         }
 
-        if ($this->hasPendingCommands()) {
-            $this->processPendingCommands();
-        }
+        // Start receiving (regular) commands
+        $this->inputPipeStream = new ReadableResourceStream($this->commPipe->getInputPipe(), $this->eventLoop);
+        $this->inputPipeStream->on('data', [$this, 'receiveCommand']);
     }
 
     private function processOpenNotifyChannelCommand($command)
@@ -245,10 +236,8 @@ class NotificationCtrl
                 }
             });
         } else {
-            // Notification process not yet initialized. Save command
-            //  to be processed afterwards
-            self::logDebug('Pending command: ' . print_r($command, true));
-            $this->pendingCommands[] = $command;
+            // Notification process not yet initialized
+            self::logError('Command received while process was not yet initialized: ' . print_r($command, true));
         }
     }
 
@@ -262,10 +251,8 @@ class NotificationCtrl
                 $this->wsNofifyChannels[$channelId]->close();
             }
         } else {
-            // Notification process not yet initialized. Save command
-            //  to be processed afterwards
-            self::logDebug('Pending command: ' . print_r($command, true));
-            $this->pendingCommands[] = $command;
+            // Notification process not yet initialized
+            self::logError('Command received while process was not yet initialized: ' . print_r($command, true));
         }
     }
 
@@ -328,7 +315,12 @@ class NotificationCtrl
         $this->clientUID = $clientUID;
 
         try {
-            $this->commPipe = new CommPipe($clientUID, false);
+            $this->commPipe = new CommPipe(
+                $clientUID,
+                false,
+                CommPipe::SEND_COMM_MODE | CommPipe::RECEIVE_COMM_MODE | CommPipe::SEND_COMM_CTRL_MODE
+                    | CommPipe::RECEIVE_COMM_CTRL_MODE
+            );
         } catch (Exception $ex) {
             throw new Exception('Error opening communication pipe: ' . $ex->getMessage());
         }
@@ -337,7 +329,8 @@ class NotificationCtrl
             // Create event loop
             $this->eventLoop = $loop = Factory::create();
 
-            $this->inputPipeStream = new ReadableResourceStream($this->commPipe->getInputPipe(), $loop);
+            // Prepare to start receiving control commands only first
+            $this->inputCtrlPipeStream = new ReadableResourceStream($this->commPipe->getInputCtrlPipe(), $loop);
             $this->commCommand = new CommCommand($this->commPipe);
         } catch (Exception $ex) {
             // Make sure that communication pipes are deleted
@@ -345,8 +338,8 @@ class NotificationCtrl
             throw new Exception('Error setting up communication pipe: ' . $ex->getMessage());
         }
 
-        // Wire up event to read command from input pipe
-        $this->inputPipeStream->on('data', [$this, 'receiveCommand']);
+        // Start receiving control commands
+        $this->inputCtrlPipeStream->on('data', [$this, 'receiveControlCommand']);
 
         // Start timer to check if parent process is still alive
         $this->checkParentAliveTimer = $loop->addPeriodicTimer($keepAliveInterval, [$this, 'checkParentAlive']);
@@ -366,6 +359,15 @@ class NotificationCtrl
         $this->setParentAlive();
         $this->commCommand->parseCommands($data);
         $this->processCommands();
+    }
+
+    public function receiveControlCommand($data)
+    {
+        self::logTrace('Receive control command handler: ' . print_r($data, true));
+        // Control command received. Indicate that parent is alive
+        $this->setParentAlive();
+        $this->commCommand->parseControlCommands($data);
+        $this->processControlCommands();
     }
 
     public function checkParentAlive()
