@@ -15,7 +15,7 @@ Catenis API Client for WordPress enables (JavaScript) code on WordPress pages to
 
 = Enabling the Catenis API client =
 
-To enable the Catenis API client for a given WordPress page, go to the page's edit page, and look for a section (meta box) named "Catenis API Client" below the page's main editing panel. Make sure the section is expanded, and check the `Load Catenis API Client` checkbox.
+To enable the Catenis API client for a given WordPress page, go to the page's edit page and look for a section (meta box) named "Catenis API Client" below the page's main editing panel. Make sure the section is expanded, and check the `Load Catenis API Client` checkbox.
 
 You can then choose to override the global settings used for instantiating the Catenis API client on that given page, like using a different device ID and its associated API access secret. Otherwise, whatever is configured in the plugin's global settings -- configured under "Settings" | "Catenis API Client" -- is going to be used.
 
@@ -75,8 +75,12 @@ However, when doing it on the "Catenis API Client" meta box on a WordPress page'
 == Changelog ==
 
 = 2.0.0 =
-* Update Catenis API client for PHP to its latest version (2.1.3), which targets version 0.7 of the Catenis Enterprise API.
-* Changes to accommodate changes introduced by the new version of the Catenis API client for PHP, including: a) change in the interface of the Send Message API method; and b) addition of new Retrieve Message Progress API method.
+* Added support for changes introduced by version 0.7 of the Catenis Enterprise API.
+* Added support for changes introduced by version 0.8 of the Catenis Enterprise API.
+* Updated dependency package Catenis API PHP client library to its latest version (3.0), which targets version 0.8 of the Catenis Enterprise API.
+* New `Compression Threshold` settings used for instantiating the Catenis API client.
+* API client methods with an update interface: *logMessage*, *sendMessage*, *readMessage*, *listMessages*, *retrieveAssetIssuanceHistory*
+* New API client method: *retrieveMessageProgress*
 * Whole new (not backwards compatible) and improved notifications implementation.
 
 = 1.1.2 =
@@ -95,7 +99,7 @@ However, when doing it on the "Catenis API Client" meta box on a WordPress page'
 == Upgrade Notice ==
 
 = 2.0.0 =
-Upgrade to this version to take advantage of the new features found in version 0.7 of the Catenis Enterprise API and the improved notifications implementation.
+Upgrade to this version to take advantage of the new features found in version 0.8 of the Catenis Enterprise API and the improved notifications implementation.
 
 = 1.1.2 =
 All users are advised to upgrade to this version.
