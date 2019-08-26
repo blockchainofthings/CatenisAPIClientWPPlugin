@@ -367,7 +367,7 @@ class ApiClient
     {
         $ctnClientCredentials = get_option('ctn_client_credentials');
         ?>
-<input type="text" id="<?php echo $args['label_for'] ?>" name="ctn_client_credentials[<?php echo $args['label_for'] ?>]"
+<input type="password" id="<?php echo $args['label_for'] ?>" name="ctn_client_credentials[<?php echo $args['label_for'] ?>]"
     class="regular-text" maxlength="128" autocomplete="off" <?php echo !empty($ctnClientCredentials[$args['label_for']])
         ? 'value="' . esc_attr($ctnClientCredentials[$args['label_for']]) . '"' : '' ?>>
         <?php

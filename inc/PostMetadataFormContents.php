@@ -37,7 +37,7 @@
                 <label for="ctn_api_access_secret">API Access Secret</label>
             </th>
             <td>
-                <input type="text" id="ctn_api_access_secret" name="_ctn_api_client[ctn_api_access_secret]" class="regular-text" maxlength="128" autocomplete="off"
+                <input type="password" id="ctn_api_access_secret" name="_ctn_api_client[ctn_api_access_secret]" class="regular-text" maxlength="128" autocomplete="off"
                         <?php echo !empty($postMetadata['ctn_api_access_secret']) ? 'value="' . esc_attr($postMetadata['ctn_api_access_secret']) . '"' : '' ?>>
             </td>
         </tr>
