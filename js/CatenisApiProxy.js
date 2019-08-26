@@ -12,15 +12,7 @@
             options = undefined;
         }
 
-        var params = [
-            message
-        ];
-
-        if (options) {
-            params.push(options);
-        }
-
-        callApiMethod('logMessage', params, callback);
+        callApiMethod('logMessage', [message, options], callback);
     };
 
     ApiProxy.prototype.sendMessage = function (message, targetDevice, options, callback) {
@@ -29,16 +21,7 @@
             options = undefined;
         }
 
-        var params = [
-            message,
-            targetDevice
-        ];
-
-        if (options) {
-            params.push(options);
-        }
-
-        callApiMethod('sendMessage', params, callback);
+        callApiMethod('sendMessage', [message, targetDevice, options], callback);
     };
 
     ApiProxy.prototype.readMessage = function (messageId, encoding, callback) {
@@ -47,31 +30,15 @@
             encoding = undefined;
         }
 
-        var params = [
-            messageId
-        ];
-
-        if (encoding) {
-            params.push(encoding);
-        }
-
-        callApiMethod('readMessage', params, callback);
+        callApiMethod('readMessage', [messageId, encoding], callback);
     };
 
     ApiProxy.prototype.retrieveMessageContainer = function (messageId, callback) {
-        var params = [
-            messageId
-        ];
-
-        callApiMethod('retrieveMessageContainer', params, callback);
+        callApiMethod('retrieveMessageContainer', [messageId], callback);
     };
 
     ApiProxy.prototype.retrieveMessageProgress = function (messageId, callback) {
-        var params = [
-            messageId
-        ];
-
-        callApiMethod('retrieveMessageProgress', params, callback);
+        callApiMethod('retrieveMessageProgress', [messageId], callback);
     };
 
     ApiProxy.prototype.listMessages = function (options, callback) {
@@ -80,13 +47,7 @@
             options = undefined;
         }
 
-        var params = [];
-
-        if (options) {
-            params.push(options);
-        }
-
-        callApiMethod('listMessages', params, callback);
+        callApiMethod('listMessages', [options], callback);
     };
 
     ApiProxy.prototype.listPermissionEvents = function (callback) {
@@ -94,20 +55,11 @@
     };
 
     ApiProxy.prototype.retrievePermissionRights = function (eventName, callback) {
-        var params = [
-            eventName
-        ];
-
-        callApiMethod('retrievePermissionRights', params, callback);
+        callApiMethod('retrievePermissionRights', [eventName], callback);
     };
 
     ApiProxy.prototype.setPermissionRights = function (eventName, rights, callback) {
-        var params = [
-            eventName,
-            rights
-        ];
-
-        callApiMethod('setPermissionRights', params, callback);
+        callApiMethod('setPermissionRights', [eventName, rights], callback);
     };
 
     ApiProxy.prototype.checkEffectivePermissionRight = function (eventName, deviceId, isProdUniqueId, callback) {
@@ -116,16 +68,7 @@
             isProdUniqueId = undefined;
         }
 
-        var params = [
-            eventName,
-            deviceId
-        ];
-
-        if (isProdUniqueId) {
-            params.push(isProdUniqueId);
-        }
-
-        callApiMethod('checkEffectivePermissionRight', params, callback);
+        callApiMethod('checkEffectivePermissionRight', [eventName, deviceId, isProdUniqueId], callback);
     };
 
     ApiProxy.prototype.listNotificationEvents = function (callback) {
@@ -138,15 +81,7 @@
             isProdUniqueId = undefined;
         }
 
-        var params = [
-            deviceId
-        ];
-
-        if (isProdUniqueId) {
-            params.push(isProdUniqueId);
-        }
-
-        callApiMethod('retrieveDeviceIdentificationInfo', params, callback);
+        callApiMethod('retrieveDeviceIdentificationInfo', [deviceId, isProdUniqueId], callback);
     };
 
     ApiProxy.prototype.issueAsset = function (assetInfo, amount, holdingDevice, callback) {
@@ -155,16 +90,7 @@
             holdingDevice = undefined;
         }
 
-        var params = [
-            assetInfo,
-            amount
-        ];
-
-        if (holdingDevice) {
-            params.push(holdingDevice);
-        }
-
-        callApiMethod('issueAsset', params, callback);
+        callApiMethod('issueAsset', [assetInfo, amount, holdingDevice], callback);
     };
 
     ApiProxy.prototype.reissueAsset = function (assetId, amount, holdingDevice, callback) {
@@ -173,42 +99,19 @@
             holdingDevice = undefined;
         }
 
-        var params = [
-            assetId,
-            amount
-        ];
-
-        if (holdingDevice) {
-            params.push(holdingDevice);
-        }
-
-        callApiMethod('reissueAsset', params, callback);
+        callApiMethod('reissueAsset', [assetId, amount, holdingDevice], callback);
     };
 
     ApiProxy.prototype.transferAsset = function (assetId, amount, receivingDevice, callback) {
-        var params = [
-            assetId,
-            amount,
-            receivingDevice
-        ];
-
-        callApiMethod('transferAsset', params, callback);
+        callApiMethod('transferAsset', [assetId, amount, receivingDevice], callback);
     };
 
     ApiProxy.prototype.retrieveAssetInfo = function (assetId, callback) {
-        var params = [
-            assetId
-        ];
-
-        callApiMethod('retrieveAssetInfo', params, callback);
+        callApiMethod('retrieveAssetInfo', [assetId], callback);
     };
 
     ApiProxy.prototype.getAssetBalance = function (assetId, callback) {
-        var params = [
-            assetId
-        ];
-
-        callApiMethod('getAssetBalance', params, callback);
+        callApiMethod('getAssetBalance', [assetId], callback);
     };
 
     ApiProxy.prototype.listOwnedAssets = function (limit, skip, callback) {
@@ -222,17 +125,7 @@
             skip = undefined;
         }
 
-        var params = [];
-
-        if (limit) {
-            params.push(limit);
-        }
-
-        if (skip) {
-            params.push(skip);
-        }
-
-        callApiMethod('listOwnedAssets', params, callback);
+        callApiMethod('listOwnedAssets', [limit, skip], callback);
     };
 
     ApiProxy.prototype.listIssuedAssets = function (limit, skip, callback) {
@@ -246,17 +139,7 @@
             skip = undefined;
         }
 
-        var params = [];
-
-        if (limit) {
-            params.push(limit);
-        }
-
-        if (skip) {
-            params.push(skip);
-        }
-
-        callApiMethod('listIssuedAssets', params, callback);
+        callApiMethod('listIssuedAssets', [limit, skip], callback);
     };
 
     ApiProxy.prototype.retrieveAssetIssuanceHistory = function (assetId, startDate, endDate, callback) {
@@ -270,19 +153,7 @@
             endDate = undefined;
         }
 
-        var params = [
-            assetId
-        ];
-
-        if (startDate) {
-            params.push(startDate);
-        }
-
-        if (endDate) {
-            params.push(endDate);
-        }
-
-        callApiMethod('retrieveAssetIssuanceHistory', params, callback);
+        callApiMethod('retrieveAssetIssuanceHistory', [assetId, startDate, endDate], callback);
     };
 
     ApiProxy.prototype.listAssetHolders = function (assetId, limit, skip, callback) {
@@ -296,19 +167,7 @@
             skip = undefined;
         }
 
-        var params = [
-            assetId
-        ];
-
-        if (limit) {
-            params.push(limit);
-        }
-
-        if (skip) {
-            params.push(skip);
-        }
-
-        callApiMethod('listAssetHolders', params, callback);
+        callApiMethod('listAssetHolders', [assetId, limit, skip], callback);
     };
 
     ApiProxy.prototype.createWsNotifyChannel = function (eventName) {
