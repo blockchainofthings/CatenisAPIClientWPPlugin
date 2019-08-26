@@ -24,13 +24,13 @@
         callApiMethod('sendMessage', [message, targetDevice, options], callback);
     };
 
-    ApiProxy.prototype.readMessage = function (messageId, encoding, callback) {
-        if (typeof encoding === 'function') {
-            callback = encoding;
-            encoding = undefined;
+    ApiProxy.prototype.readMessage = function (messageId, options, callback) {
+        if (typeof options === 'function') {
+            callback = options;
+            options = undefined;
         }
 
-        callApiMethod('readMessage', [messageId, encoding], callback);
+        callApiMethod('readMessage', [messageId, options], callback);
     };
 
     ApiProxy.prototype.retrieveMessageContainer = function (messageId, callback) {
