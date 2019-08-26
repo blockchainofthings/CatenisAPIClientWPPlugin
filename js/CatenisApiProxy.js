@@ -41,13 +41,24 @@
         callApiMethod('retrieveMessageProgress', [messageId], callback);
     };
 
-    ApiProxy.prototype.listMessages = function (options, callback) {
-        if (typeof options === 'function') {
-            callback = options;
-            options = undefined;
+    ApiProxy.prototype.listMessages = function (selector, limit, skip, callback) {
+        if (typeof selector === 'function') {
+            callback = selector;
+            selector = undefined;
+            limit = undefined;
+            skip = undefined;
+        }
+        else if (typeof limit === 'function') {
+            callback = limit;
+            limit = undefined;
+            skip = undefined;
+        }
+        else if (typeof skip === 'function') {
+            callback = skip;
+            skip = undefined;
         }
 
-        callApiMethod('listMessages', [options], callback);
+        callApiMethod('listMessages', [selector, limit, skip], callback);
     };
 
     ApiProxy.prototype.listPermissionEvents = function (callback) {
@@ -142,18 +153,31 @@
         callApiMethod('listIssuedAssets', [limit, skip], callback);
     };
 
-    ApiProxy.prototype.retrieveAssetIssuanceHistory = function (assetId, startDate, endDate, callback) {
+    ApiProxy.prototype.retrieveAssetIssuanceHistory = function (assetId, startDate, endDate, limit, skip, callback) {
         if (typeof startDate === 'function') {
             callback = startDate;
             startDate = undefined;
             endDate = undefined;
+            limit = undefined;
+            skip = undefined;
         }
         else if (typeof endDate === 'function') {
             callback = endDate;
             endDate = undefined;
+            limit = undefined;
+            skip = undefined;
+        }
+        else if (typeof limit === 'function') {
+            callback = limit;
+            limit = undefined;
+            skip = undefined;
+        }
+        else if (typeof skip === 'function') {
+            callback = skip;
+            skip = undefined;
         }
 
-        callApiMethod('retrieveAssetIssuanceHistory', [assetId, startDate, endDate], callback);
+        callApiMethod('retrieveAssetIssuanceHistory', [assetId, startDate, endDate, limit, skip], callback);
     };
 
     ApiProxy.prototype.listAssetHolders = function (assetId, limit, skip, callback) {

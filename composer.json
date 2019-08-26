@@ -1,21 +1,37 @@
 {
   "name": "blockchainofthings/catenis-api-client-wp",
   "description": "Catenis Enterprise API client plugin for WordPress",
-  "version": "2.0.0",
   "type": "wordpress-plugin",
   "keywords": [
     "Wordpress",
     "Catenis",
     "blockchain"
   ],
+  "repositories": [
+    {
+      "type": "vcs",
+      "url": "https://github.com/claudiosdc/react-guzzle-psr7.git"
+    },
+    {
+      "type": "vcs",
+      "url": "https://github.com/claudiosdc/react-guzzle-http-client.git"
+    },
+    {
+      "type": "vcs",
+      "url": "https://github.com/claudiosdc/reactphp-buzz.git"
+    }
+  ],
   "require": {
     "php": ">=5.6.0",
     "ext-posix": "*",
     "ext-pcntl": "*",
     "ratchet/pawl": "^0.3.4",
-    "blockchainofthings/catenis-api-client": "^2.1.3",
     "react/event-loop": "^1.0",
-    "react/stream": "^1.1.0"
+    "react/stream": "^1.1.0",
+    "blockchainofthings/catenis-api-client": "~3.0",
+    "wyrihaximus/react-guzzle-psr7": "dev-decode-content",
+    "wyrihaximus/react-guzzle-http-client": "dev-decode-content",
+    "clue/buzz-react": "dev-decode-content"
   },
   "license": "MIT",
   "authors": [
