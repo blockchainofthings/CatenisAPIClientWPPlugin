@@ -13,6 +13,7 @@ class ApiClient
 {
     private static $initNtfyProcWaitRespTimeout = 1;    // 1 sec. (in seconds)
     private static $pollServerTimeout = 30;    // 30 sec. (in seconds)
+    private static $minCompressThreshold = 32;   // Minimum compression threshold in bytes
 
     private $pluginPath;
     private $pluginBaseName;
@@ -78,6 +79,11 @@ class ApiClient
             $options['secure'] = $postMetadata['ctn_secure'] === 'on';
         } elseif (!empty($globalCtnClientOptions['ctn_secure'])) {
             $options['secure'] = $globalCtnClientOptions['ctn_secure'] === 'on';
+        }
+
+        if (!empty($postMetadata['ctn_compress_threshold']) && ($val = (int)$postMetadata['ctn_compress_threshold'])
+                >= self::$minCompressThreshold) {
+            $options['compressThreshold'] = $val;
         }
 
         $ctnClientData->ctnClientOptions = !empty($options) ? $options : null;
@@ -293,6 +299,14 @@ class ApiClient
             'ctn_client_options',
             ['label_for' => 'ctn_secure']
         );
+        add_settings_field(
+            'ctn_compress_threshold',
+            'Compression Threshold',
+            [$this, 'displayCompressThresholdFieldContents'],
+            'ctn_api_client_opts',
+            'ctn_client_options',
+            ['label_for' => 'ctn_compress_threshold']
+        );
 
         // Add Catenis API client config panel to pages (post type = 'page')
         add_meta_box(
@@ -408,6 +422,17 @@ class ApiClient
     <option value="off" <?php echo !empty($ctnClientOptions[$args['label_for']])
         ? selected($ctnClientOptions[$args['label_for']], 'off', false) : ''; ?>>Off</option>
 </select>
+        <?php
+    }
+
+    public function displayCompressThresholdFieldContents($args)
+    {
+        $ctnClientOptions = get_option('ctn_client_options');
+        ?>
+<input type="number" id="<?php echo $args['label_for'] ?>" name="ctn_client_options[<?php echo $args['label_for'] ?>]"
+    class="regular-text" min="<?php echo self::$minCompressThreshold ?>" step="32" <?php echo
+    !empty($ctnClientOptions[$args['label_for']]) ? 'value="' . esc_attr($ctnClientOptions[$args['label_for']]) . '"'
+    : '' ?>>
         <?php
     }
 

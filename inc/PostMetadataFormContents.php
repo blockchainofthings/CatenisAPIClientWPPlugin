@@ -79,6 +79,15 @@
                 </select>
             </td>
         </tr>
+        <tr>
+            <th scope="row">
+                <label for="ctn_compress_threshold">Compression Threshold</label>
+            </th>
+            <td>
+                <input type="number" id="ctn_compress_threshold" name="_ctn_api_client[ctn_compress_threshold]" class="regular-text" min="<?php echo self::$minCompressThreshold ?>" step="32"
+                        <?php echo !empty($postMetadata['ctn_compress_threshold']) ? 'value="' . esc_attr($postMetadata['ctn_compress_threshold']) . '"' : '' ?>>
+            </td>
+        </tr>
         </tbody>
     </table>
 </div>
