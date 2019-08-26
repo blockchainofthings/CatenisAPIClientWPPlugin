@@ -266,7 +266,7 @@
             }, function (data) {
                 // Success. Save notification channel instance and return
                 _self.apiProxy._setWsNotifyChannel(_self);
-                callback(undefined);
+                callback.call(_self);
             }, 'json')
             .fail(function (jqXHR, textStatus, errorThrown) {
                 // Failure
@@ -284,12 +284,14 @@
 
                 // Display returned error
                 console.log(errMessage);
-                callback(new Error(errMessage));
+                callback.call(_self, new Error(errMessage));
             });
         }
     }
 
     WsNotifyChannel.prototype.close = function (callback) {
+        var _self = this;
+
         jQuery.post(context.ctn_api_proxy_obj.ajax_url, {
             _ajax_nonce: context.ctn_api_proxy_obj.nonce,
             action: "ctn_close_notify_channel",
@@ -297,7 +299,7 @@
             channel_id: this.channelId
         }, function (data) {
             // Success
-            callback(undefined);
+            callback.call(_self);
         }, 'json')
         .fail(function (jqXHR, textStatus, errorThrown) {
             // Failure
@@ -315,7 +317,7 @@
 
             // Display returned error
             console.log(errMessage);
-            callback(new Error(errMessage));
+            callback.call(_self, new Error(errMessage));
         });
     }
 
