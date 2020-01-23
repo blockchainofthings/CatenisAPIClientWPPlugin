@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.1.0] - 2020-01-23
+
+### Changes
+- Updated dependency package Catenis API PHP client library to its latest version (4.0), which targets version 0.9 of the Catenis Enterprise API.
+
+### Fixes
+- Added workaround to avoid that Catenis device credentials fields — *Device ID* and *API Access Secret* — be automatically filled by the web browser when editing a page. This behavior has been observed on Google Chrome 79.0 on Linux.
+
 ## [2.0.0] - 2019-08-26
 
 ### Breaking changes
