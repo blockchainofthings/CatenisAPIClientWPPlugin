@@ -2,7 +2,7 @@
 
 Provides a way to use the Catenis Enterprise services from within WordPress.
 
-This release (2.0.0) uses version 3.0 of the Catenis API PHP client library and targets version 0.8 of the Catenis Enterprise API.
+This release (2.1.0) uses version 4.0 of the Catenis API PHP client library and targets version 0.9 of the Catenis Enterprise API.
 
 ## Description
 
