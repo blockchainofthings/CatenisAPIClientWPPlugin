@@ -20,8 +20,12 @@
 <div id="divCtnApiClientSetting" style="display:none">
     <p style="font-size:110%">Override global settings<br><span style="color:gray">(leave field blank to use the corresponding global setting)</span></p>
     <h2 style="font-weight:600;padding:0;margin-top:0.5em">Client Credentials</h2>
-    <p>Enter credentials for the Catenis device to use with the Catenis API client</p>
-    <table class="form-table meta-table">
+    <p>Credentials of Catenis device to use with the Catenis API client</p>
+    <p>
+        <a id="lnkShowCredentials" style="display:none" href="javascript:" onclick="javascript:ctnShowDeviceCredentials(true);return false">Enter credentials</a>
+        <a id="lnkHideCredentials" style="display:none" href="javascript:" onclick="javascript:ctnShowDeviceCredentials(false);return false">Clear credentials</a>
+    </p>
+    <table id="tblDevCredentials" class="form-table meta-table" style="display:none">
         <tbody>
         <tr>
             <th scope="row">
@@ -30,6 +34,7 @@
             <td>
                 <input type="text" id="ctn_device_id" name="_ctn_api_client[ctn_device_id]" class="regular-text" maxlength="20" autocomplete="off"
                         <?php echo !empty($postMetadata['ctn_device_id']) ? 'value="' . esc_attr($postMetadata['ctn_device_id']) . '"' : '' ?>>
+                <script>document.getElementById('ctn_device_id').disabled = true</script>
             </td>
         </tr>
         <tr>
@@ -39,6 +44,7 @@
             <td>
                 <input type="password" id="ctn_api_access_secret" name="_ctn_api_client[ctn_api_access_secret]" class="regular-text" maxlength="128" autocomplete="off"
                         <?php echo !empty($postMetadata['ctn_api_access_secret']) ? 'value="' . esc_attr($postMetadata['ctn_api_access_secret']) . '"' : '' ?>>
+                <script>document.getElementById('ctn_api_access_secret').disabled = true</script>
             </td>
         </tr>
         </tbody>
@@ -96,4 +102,27 @@
     function ctnShowApiClientSettings(show) {
         document.getElementById('divCtnApiClientSetting').style.display = show ? 'block' : 'none';
     }
+    function ctnShowDeviceCredentials(show) {
+        var fieldDeviceId = document.getElementById('ctn_device_id');
+        var fieldApiAccessSecret = document.getElementById('ctn_api_access_secret');
+
+        if (show) {
+            fieldDeviceId.disabled = false;
+            fieldApiAccessSecret.disabled = false;
+            document.getElementById('tblDevCredentials').style.display = 'block';
+            document.getElementById('lnkShowCredentials').style.display = 'none';
+            document.getElementById('lnkHideCredentials').style.display = 'inline';
+        }
+        else {
+            document.getElementById('tblDevCredentials').style.display = 'none';
+            fieldDeviceId.value = '';
+            fieldApiAccessSecret.value = '';
+            fieldDeviceId.disabled = true;
+            fieldApiAccessSecret.disabled = true;
+            document.getElementById('lnkShowCredentials').style.display = 'inline';
+            document.getElementById('lnkHideCredentials').style.display = 'none';
+        }
+    }
+    ctnShowDeviceCredentials(<?php echo !empty($postMetadata['ctn_device_id']) || !empty($postMetadata['ctn_api_access_secret']) ?
+        'true' : 'false' ?>);
 </script>

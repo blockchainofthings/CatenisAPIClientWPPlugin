@@ -358,7 +358,7 @@ class ApiClient
 
     public function displayClientCredentialsSectionInfo()
     {
-        echo '<p>Enter credentials for the Catenis device to use with the Catenis API client</p>';
+        echo '<p>Enter credentials of Catenis device to use with the Catenis API client</p>';
     }
 
     public function displayClientOptionsSectionInfo()
