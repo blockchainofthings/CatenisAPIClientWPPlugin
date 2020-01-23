@@ -28,7 +28,7 @@
     "ratchet/pawl": "^0.3.4",
     "react/event-loop": "^1.0",
     "react/stream": "^1.1.0",
-    "blockchainofthings/catenis-api-client": "~3.0",
+    "blockchainofthings/catenis-api-client": "~4.0",
     "wyrihaximus/react-guzzle-psr7": "dev-decode-content",
     "wyrihaximus/react-guzzle-http-client": "dev-decode-content",
     "clue/buzz-react": "dev-decode-content"

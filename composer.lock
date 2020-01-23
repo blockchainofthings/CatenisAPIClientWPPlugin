@@ -4,20 +4,20 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "25e0b1778d179bd32b1443070ad12506",
+    "content-hash": "ab3359aa782f16667dd5a114bcf9469d",
     "packages": [
         {
             "name": "blockchainofthings/catenis-api-client",
-            "version": "v3.0.1",
+            "version": "v4.0.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/blockchainofthings/CatenisAPIClientPHP.git",
-                "reference": "253021a9c3ba40718f878384438b5bf93aa9ddbf"
+                "reference": "c4b441e21d03e33947167f577cb1fe56062d1bbd"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/blockchainofthings/CatenisAPIClientPHP/zipball/253021a9c3ba40718f878384438b5bf93aa9ddbf",
-                "reference": "253021a9c3ba40718f878384438b5bf93aa9ddbf",
+                "url": "https://api.github.com/repos/blockchainofthings/CatenisAPIClientPHP/zipball/c4b441e21d03e33947167f577cb1fe56062d1bbd",
+                "reference": "c4b441e21d03e33947167f577cb1fe56062d1bbd",
                 "shasum": ""
             },
             "require": {
@@ -53,7 +53,7 @@
                 }
             ],
             "description": "Catenis Enterprise API client library for PHP",
-            "time": "2019-08-24T13:12:54+00:00"
+            "time": "2020-01-23T14:57:14+00:00"
         },
         {
             "name": "clue/block-react",
