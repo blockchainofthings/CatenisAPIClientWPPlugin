@@ -103,7 +103,7 @@ However, when doing it on the "Catenis API Client" meta box on a WordPress page'
 == Upgrade Notice ==
 
 = 2.1.0 =
-Upgrade to this version to advantage of the new features found in version 0.9 of the Catenis Enterprise API, and to improve the end user's experience when using Google Chrome.
+Upgrade to this version to take advantage of the new features found in version 0.9 of the Catenis Enterprise API, and to improve the end user's experience when using Google Chrome.
 
 = 2.0.0 =
 Upgrade to this version to take advantage of the new features found in version 0.8 of the Catenis Enterprise API and the improved notifications implementation.
