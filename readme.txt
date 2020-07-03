@@ -74,6 +74,9 @@ However, when doing it on the "Catenis API Client" meta box on a WordPress page'
 
 == Changelog ==
 
+= 2.2.0 =
+* Added support for changes introduced by version 0.10 of the Catenis Enterprise API.
+
 = 2.1.0 =
 * Updated dependency package Catenis API PHP client library to its latest version (4.0), which targets version 0.9 of the Catenis Enterprise API.
 * Added workaround to avoid that Catenis device credentials fields — *Device ID* and *API Access Secret* — be automatically filled by the web browser when editing a page. This behavior has been observed on Google Chrome 79.0 on Linux.
@@ -101,6 +104,9 @@ However, when doing it on the "Catenis API Client" meta box on a WordPress page'
 * Initial working version. Exposes all Catenis API methods (as of version 0.6 of the Catenis API), but does not include support for notifications.
 
 == Upgrade Notice ==
+
+= 2.2.0 =
+Upgrade to this version to take advantage of the new features found in version 0.10 of the Catenis Enterprise API.
 
 = 2.1.0 =
 Upgrade to this version to take advantage of the new features found in version 0.9 of the Catenis Enterprise API, and to improve the end user's experience when using Google Chrome.
