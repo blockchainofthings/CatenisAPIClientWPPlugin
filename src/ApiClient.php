@@ -55,10 +55,10 @@ class ApiClient
         $ctnClientData->ctnClientCredentials = new stdClass();
         $ctnClientData->ctnClientCredentials->deviceId = !empty($postMetadata['ctn_device_id'])
             ? $postMetadata['ctn_device_id'] : (!empty($globalCtnClientCredentials['ctn_device_id'])
-            ? $globalCtnClientCredentials['ctn_device_id'] : '');
+            ? $globalCtnClientCredentials['ctn_device_id'] : null);
         $ctnClientData->ctnClientCredentials->apiAccessSecret = !empty($postMetadata['ctn_api_access_secret'])
             ? $postMetadata['ctn_api_access_secret'] : (!empty($globalCtnClientCredentials['ctn_api_access_secret'])
-            ? $globalCtnClientCredentials['ctn_api_access_secret'] : '');
+            ? $globalCtnClientCredentials['ctn_api_access_secret'] : null);
 
         $globalCtnClientOptions = get_option('ctn_client_options');
         $options = [];

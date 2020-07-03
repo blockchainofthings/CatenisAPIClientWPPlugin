@@ -37,6 +37,15 @@
         callApiMethod('retrieveMessageContainer', [messageId], callback);
     };
 
+    ApiProxy.prototype.retrieveMessageOrigin = function (messageId, msgToSign, callback) {
+        if (typeof msgToSign === 'function') {
+            callback = msgToSign;
+            msgToSign = undefined;
+        }
+
+        callApiMethod('retrieveMessageOrigin', [messageId, msgToSign], callback);
+    };
+
     ApiProxy.prototype.retrieveMessageProgress = function (messageId, callback) {
         callApiMethod('retrieveMessageProgress', [messageId], callback);
     };
