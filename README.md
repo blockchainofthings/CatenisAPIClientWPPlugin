@@ -127,3 +127,9 @@ wsNotifyChannel.close(function (error) {
     }
 });
 ```
+
+## License
+
+This plugin is released under the [MIT License](LICENSE). Feel free to fork, and modify!
+
+Copyright © 2018-2021, Blockchain of Things Inc.
