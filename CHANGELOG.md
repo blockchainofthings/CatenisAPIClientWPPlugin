@@ -3,13 +3,13 @@
 ## [2.2.0] - 2020-07-02
 
 ### New features
-- Added support for changes introduced by version 0.10 of the Catenis Enterprise API: new public API method Retrieve
+- Added support for changes introduced by version 0.10 of the Catenis API: new public API method Retrieve
  Message Origin.
 
 ## [2.1.0] - 2020-01-23
 
 ### Changes
-- Updated dependency package Catenis API PHP client library to its latest version (4.0), which targets version 0.9 of the Catenis Enterprise API.
+- Updated dependency package Catenis API PHP client library to its latest version (4.0), which targets version 0.9 of the Catenis API.
 
 ### Fixes
 - Added workaround to avoid that Catenis device credentials fields — *Device ID* and *API Access Secret* — be automatically filled by the web browser when editing a page. This behavior has been observed on Google Chrome 79.0 on Linux.
@@ -26,15 +26,15 @@
 - Whole new (not backwards compatible) and improved notifications implementation.
 
 ### Other changes
-- Updated dependency package Catenis API PHP client library to its latest version (3.0), which targets version 0.8 of the Catenis Enterprise API.
+- Updated dependency package Catenis API PHP client library to its latest version (3.0), which targets version 0.8 of the Catenis API.
 - Added New *retrieveMessageProgress* method.
 - Changed interface of *listMessages* method: first parameter renamed to `selector`; new parameters `limit` and `skip` added.
 - Changed interface of *retrieveAssetIssuanceHistory* method: new parameters `limit` and `skip` added.
 
 ### New features
-- Added support for changes introduced by version 0.7 of the Catenis Enterprise API: log, send and read message in chunks.
+- Added support for changes introduced by version 0.7 of the Catenis API: log, send and read message in chunks.
 - WebSocket notification channel object emits new `open` event.
-- Added support for changes introduced by version 0.8 of the Catenis Enterprise API: "pagination" (limit/skip) for API
+- Added support for changes introduced by version 0.8 of the Catenis API: "pagination" (limit/skip) for API
  methods List Messages and Retrieve Asset Issuance History; new URI format for notification endpoints.
 - New `Compression Threshold` settings used for instantiating the Catenis API client.
 

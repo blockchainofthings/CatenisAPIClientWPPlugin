@@ -1,6 +1,6 @@
 {
   "name": "blockchainofthings/catenis-api-client-wp",
-  "description": "Catenis Enterprise API client plugin for WordPress",
+  "description": "Catenis API client plugin for WordPress",
   "type": "wordpress-plugin",
   "keywords": [
     "Wordpress",

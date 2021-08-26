@@ -1,12 +1,12 @@
 # Catenis API Client for WordPress
 
-Provides a way to use the Catenis Enterprise services from within WordPress.
+Provides a way to use the Catenis services from within WordPress.
 
-This release (2.2.0) uses version 4.1 of the Catenis API PHP client library and targets version 0.10 of the Catenis Enterprise API.
+This release (2.2.0) uses version 4.1 of the Catenis API PHP client library and targets version 0.10 of the Catenis API.
 
 ## Description
 
-Catenis API Client for WordPress enables (JavaScript) code on WordPress pages to interact with the Catenis Enterprise API.
+Catenis API Client for WordPress enables (JavaScript) code on WordPress pages to interact with the Catenis API.
 
 ### Enabling the Catenis API client
 
@@ -18,7 +18,7 @@ You can then choose to override the global settings used for instantiating the C
 
 Once enabled, a global JavaScript variable named `ctnApiProxy` is made available on the page. That variable holds an object that functions as a proxy to the instantiated Catenis API client.
 
-Use the *ctnApiProxy* variable to call the Catenis Enterprise API methods by invoking the corresponding method on that object.
+Use the *ctnApiProxy* variable to call the Catenis API methods by invoking the corresponding method on that object.
 
 For a reference of the available methods, please refer to the [Catenis API JavaScript Client](https://github.com/blockchainofthings/CatenisAPIClientJS) as it is functionally identical to the Catenis API Client for WordPress, except for notifications support and error handling.
 
@@ -48,11 +48,11 @@ The PHP executable should be in the system PATH so that the plugin can spawn the
 1. Go to "Settings" | "Catenis API Client" to configure the global settings for instantiating the Catenis API client.
 1. A meta box named "Catenis API Client" will be available on every WordPress page's edit page. Use it to make the Catenis API client available from a given page, and optionally configure custom settings for instantiating the Catenis API client for that given page.
 
-Please refer to [Catenis Enterprise API documentation](https://www.catenis.com/docs/api) for further information on accessing the Catenis Enterprise API.
+Please refer to [Catenis API documentation](https://www.catenis.com/docs/api) for further information on accessing the Catenis API.
 
 ## Frequently Asked Questions
 
-### What client options settings should I use to connect with the Catenis Enterprise API sandbox environment? =
+### What client options settings should I use to connect with the Catenis API sandbox environment? =
 
 When doing it on the plugin's global settings ("Settings" | "Catenis API Client"), just leave all fields of the "Client Options" section blank.
 

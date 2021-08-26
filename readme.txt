@@ -1,17 +1,17 @@
 === Catenis API Client for WordPress ===
 Contributors: catenisadmin
-Tags: Catenis, Catenis Enterprise API, Blockchain of Things, blockchain
+Tags: Catenis, Catenis API, Blockchain of Things, blockchain
 Requires at least: 4.0
 Tested up to: 5.4.2
 Requires PHP: 5.6
 Stable tag: 2.2.0
 License: MIT
 
-Provides a way to use the Catenis Enterprise services from within WordPress
+Provides a way to use the Catenis services from within WordPress
 
 == Description ==
 
-Catenis API Client for WordPress enables (JavaScript) code on WordPress pages to interact with the Catenis Enterprise API.
+Catenis API Client for WordPress enables (JavaScript) code on WordPress pages to interact with the Catenis API.
 
 = Enabling the Catenis API client =
 
@@ -23,7 +23,7 @@ You can then choose to override the global settings used for instantiating the C
 
 Once enabled, a global JavaScript variable named `ctnApiClient` is made available on the page. That variable holds the instantiated Catenis API client object.
 
-Use the *ctnApiClient* variable to call the Catenis Enterprise API methods by invoking the corresponding method on that object.
+Use the *ctnApiClient* variable to call the Catenis API methods by invoking the corresponding method on that object.
 
 For a reference of the available methods, please refer to the [Catenis API JavaScript Client](https://github.com/blockchainofthings/CatenisAPIClientJS) as it is functionally identical to the Catenis API Client for WordPress, except for notifications support and error handling.
 
@@ -53,11 +53,11 @@ The PHP executable should be in the system PATH so that the plugin can spawn the
 1. Go to "Settings" | "Catenis API Client" to configure the global settings for instantiating the Catenis API client.
 1. A meta box named "Catenis API Client" will be available on every WordPress page's edit page. Use it to make the Catenis API client available from a given page, and optionally configure custom settings for instantiating the Catenis API client for that given page.
 
-Please refer to [Catenis Enterprise API documentation](https://www.catenis.com/docs/api) for further information on accessing the Catenis Enterprise API.
+Please refer to [Catenis API documentation](https://www.catenis.com/docs/api) for further information on accessing the Catenis API.
 
 == Frequently Asked Questions ==
 
-= What client options settings should I use to connect with the Catenis Enterprise API sandbox environment? =
+= What client options settings should I use to connect with the Catenis API sandbox environment? =
 
 When doing it on the plugin's global settings ("Settings" | "Catenis API Client"), just leave all fields of the "Client Options" section blank.
 
@@ -75,16 +75,16 @@ However, when doing it on the "Catenis API Client" meta box on a WordPress page'
 == Changelog ==
 
 = 2.2.0 =
-* Added support for changes introduced by version 0.10 of the Catenis Enterprise API.
+* Added support for changes introduced by version 0.10 of the Catenis API.
 
 = 2.1.0 =
-* Updated dependency package Catenis API PHP client library to its latest version (4.0), which targets version 0.9 of the Catenis Enterprise API.
+* Updated dependency package Catenis API PHP client library to its latest version (4.0), which targets version 0.9 of the Catenis API.
 * Added workaround to avoid that Catenis device credentials fields — *Device ID* and *API Access Secret* — be automatically filled by the web browser when editing a page. This behavior has been observed on Google Chrome 79.0 on Linux.
 
 = 2.0.0 =
-* Added support for changes introduced by version 0.7 of the Catenis Enterprise API.
-* Added support for changes introduced by version 0.8 of the Catenis Enterprise API.
-* Updated dependency package Catenis API PHP client library to its latest version (3.0), which targets version 0.8 of the Catenis Enterprise API.
+* Added support for changes introduced by version 0.7 of the Catenis API.
+* Added support for changes introduced by version 0.8 of the Catenis API.
+* Updated dependency package Catenis API PHP client library to its latest version (3.0), which targets version 0.8 of the Catenis API.
 * New `Compression Threshold` settings used for instantiating the Catenis API client.
 * API client methods with an update interface: *logMessage*, *sendMessage*, *readMessage*, *listMessages*, *retrieveAssetIssuanceHistory*
 * New API client method: *retrieveMessageProgress*
@@ -106,13 +106,13 @@ However, when doing it on the "Catenis API Client" meta box on a WordPress page'
 == Upgrade Notice ==
 
 = 2.2.0 =
-Upgrade to this version to take advantage of the new features found in version 0.10 of the Catenis Enterprise API.
+Upgrade to this version to take advantage of the new features found in version 0.10 of the Catenis API.
 
 = 2.1.0 =
-Upgrade to this version to take advantage of the new features found in version 0.9 of the Catenis Enterprise API, and to improve the end user's experience when using Google Chrome.
+Upgrade to this version to take advantage of the new features found in version 0.9 of the Catenis API, and to improve the end user's experience when using Google Chrome.
 
 = 2.0.0 =
-Upgrade to this version to take advantage of the new features found in version 0.8 of the Catenis Enterprise API and the improved notifications implementation.
+Upgrade to this version to take advantage of the new features found in version 0.8 of the Catenis API and the improved notifications implementation.
 
 = 1.1.2 =
 All users are advised to upgrade to this version.
