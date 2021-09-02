@@ -203,6 +203,72 @@
         callApiMethod('listAssetHolders', [assetId, limit, skip], callback);
     };
 
+    ApiProxy.prototype.exportAsset = function (assetId, foreignBlockchain, token, options, callback) {
+        if (typeof options === 'function') {
+            callback = options;
+            options = undefined;
+        }
+
+        callApiMethod('exportAsset', [assetId, foreignBlockchain, token, options], callback);
+    };
+
+    ApiProxy.prototype.migrateAsset = function (assetId, foreignBlockchain, migration, options, callback) {
+        if (typeof options === 'function') {
+            callback = options;
+            options = undefined;
+        }
+
+        callApiMethod('migrateAsset', [assetId, foreignBlockchain, migration, options], callback);
+    };
+
+    ApiProxy.prototype.assetExportOutcome = function (assetId, foreignBlockchain, callback) {
+        callApiMethod('assetExportOutcome', [assetId, foreignBlockchain], callback);
+    };
+
+    ApiProxy.prototype.assetMigrationOutcome = function (migrationId, callback) {
+        callApiMethod('assetMigrationOutcome', [migrationId], callback);
+    };
+
+    ApiProxy.prototype.listExportedAssets = function (selector, limit, skip, callback) {
+        if (typeof selector === 'function') {
+            callback = selector;
+            selector = undefined;
+            limit = undefined;
+            skip = undefined;
+        }
+        else if (typeof limit === 'function') {
+            callback = limit;
+            limit = undefined;
+            skip = undefined;
+        }
+        else if (typeof skip === 'function') {
+            callback = skip;
+            skip = undefined;
+        }
+
+        callApiMethod('listExportedAssets', [selector, limit, skip], callback);
+    };
+
+    ApiProxy.prototype.listAssetMigrations = function (selector, limit, skip, callback) {
+        if (typeof selector === 'function') {
+            callback = selector;
+            selector = undefined;
+            limit = undefined;
+            skip = undefined;
+        }
+        else if (typeof limit === 'function') {
+            callback = limit;
+            limit = undefined;
+            skip = undefined;
+        }
+        else if (typeof skip === 'function') {
+            callback = skip;
+            skip = undefined;
+        }
+
+        callApiMethod('listAssetMigrations', [selector, limit, skip], callback);
+    };
+
     ApiProxy.prototype.createWsNotifyChannel = function (eventName) {
         return new WsNotifyChannel(this, eventName);
     };

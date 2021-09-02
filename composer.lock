@@ -4,20 +4,20 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "4f58e4abc083e293404c55390f9bd492",
+    "content-hash": "871bfd6229558d2aeadcc7f650e95b16",
     "packages": [
         {
             "name": "blockchainofthings/catenis-api-client",
-            "version": "v4.1.0",
+            "version": "v5.0.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/blockchainofthings/CatenisAPIClientPHP.git",
-                "reference": "aaa72ae0944e900f1fad927c3e8586c4e7894c54"
+                "reference": "c106c04792ab365901374787cc5f23a53d751a94"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/blockchainofthings/CatenisAPIClientPHP/zipball/aaa72ae0944e900f1fad927c3e8586c4e7894c54",
-                "reference": "aaa72ae0944e900f1fad927c3e8586c4e7894c54",
+                "url": "https://api.github.com/repos/blockchainofthings/CatenisAPIClientPHP/zipball/c106c04792ab365901374787cc5f23a53d751a94",
+                "reference": "c106c04792ab365901374787cc5f23a53d751a94",
                 "shasum": ""
             },
             "require": {
@@ -52,8 +52,12 @@
                     "email": "claudio@blockchainofthings.com"
                 }
             ],
-            "description": "Catenis Enterprise API client library for PHP",
-            "time": "2020-07-02T17:20:26+00:00"
+            "description": "Catenis API client library for PHP",
+            "support": {
+                "issues": "https://github.com/blockchainofthings/CatenisAPIClientPHP/issues",
+                "source": "https://github.com/blockchainofthings/CatenisAPIClientPHP/tree/v5.0.0"
+            },
+            "time": "2021-09-02T15:37:35+00:00"
         },
         {
             "name": "clue/block-react",
@@ -1644,5 +1648,6 @@
         "ext-posix": "*",
         "ext-pcntl": "*"
     },
-    "platform-dev": []
+    "platform-dev": [],
+    "plugin-api-version": "2.1.0"
 }
