@@ -74,6 +74,15 @@ However, when doing it on the "Catenis API Client" meta box on a WordPress page'
 
 == Changelog ==
 
+= 3.0.0 =
+* Added support for changes introduced by version 0.11 of the Catenis API: new asset export feature, including the new
+API methods Export Asset, Migrate Asset, Asset Export Outcome, Asset Migration Outcome, List Exported Assets, and
+List Asset Migrations.
+* The list of current asset holders returned by the *listAssetHolders* method may now include an entry that reports the
+total asset amount that is currently migrated to foreign blockchains as per the new behavior of version 0.11 of the
+Catenis API. That entry differs from the regular ones in that the `holder` property is missing and a new boolean type
+property named `migrated`, the value of which is always `true`, is present.
+
 = 2.2.0 =
 * Added support for changes introduced by version 0.10 of the Catenis API.
 
@@ -104,6 +113,9 @@ However, when doing it on the "Catenis API Client" meta box on a WordPress page'
 * Initial working version. Exposes all Catenis API methods (as of version 0.6 of the Catenis API), but does not include support for notifications.
 
 == Upgrade Notice ==
+
+= 3.0.0 =
+Upgrade to this version to take advantage of the new features found in version 0.11 of the Catenis API.
 
 = 2.2.0 =
 Upgrade to this version to take advantage of the new features found in version 0.10 of the Catenis API.
