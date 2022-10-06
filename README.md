@@ -2,7 +2,7 @@
 
 Provides a way to use the Catenis services from within WordPress.
 
-This release (3.0.0) uses version 5.0 of the Catenis API PHP client library and targets version 0.11 of the Catenis API.
+This release (3.0.0) uses version 6.0 of the Catenis API PHP client library and targets version 0.12 of the Catenis API.
 
 ## Description
 

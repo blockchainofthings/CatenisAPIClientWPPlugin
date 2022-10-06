@@ -269,6 +269,71 @@
         callApiMethod('listAssetMigrations', [selector, limit, skip], callback);
     };
 
+    ApiProxy.prototype.issueNonFungibleAsset = function (issuanceInfoOrContinuationToken, nonFungibleTokens, isFinal, callback) {
+        if (typeof nonFungibleTokens === 'function') {
+            callback = nonFungibleTokens;
+            nonFungibleTokens = undefined;
+            isFinal = undefined;
+        }
+        else if (typeof isFinal === 'function') {
+            callback = isFinal;
+            isFinal = undefined;
+        }
+
+        callApiMethod('issueNonFungibleAsset', [issuanceInfoOrContinuationToken, nonFungibleTokens, isFinal], callback);
+    }
+
+    ApiProxy.prototype.reissueNonFungibleAsset = function (assetId, issuanceInfoOrContinuationToken, nonFungibleTokens, isFinal, callback) {
+        if (Array.isArray(issuanceInfoOrContinuationToken)) {
+            callback = isFinal;
+            isFinal = nonFungibleTokens;
+            nonFungibleTokens = issuanceInfoOrContinuationToken;
+            issuanceInfoOrContinuationToken = undefined;
+        }
+
+        if (typeof nonFungibleTokens === 'function') {
+            callback = nonFungibleTokens;
+            nonFungibleTokens = undefined;
+            isFinal = undefined;
+        }
+        else if (typeof isFinal === 'function') {
+            callback = isFinal;
+            isFinal = undefined;
+        }
+
+        callApiMethod('reissueNonFungibleAsset', [assetId, issuanceInfoOrContinuationToken, nonFungibleTokens, isFinal], callback);
+    }
+
+    ApiProxy.prototype.retrieveNonFungibleAssetIssuanceProgress = function (issuanceId, callback) {
+        callApiMethod('retrieveNonFungibleAssetIssuanceProgress', [issuanceId], callback);
+    }
+
+    ApiProxy.prototype.retrieveNonFungibleToken = function (tokenId, options, callback) {
+        if (typeof options === 'function') {
+            callback = options;
+            options = undefined;
+        }
+
+        callApiMethod('retrieveNonFungibleToken', [tokenId, options], callback);
+    }
+
+    ApiProxy.prototype.retrieveNonFungibleTokenRetrievalProgress = function (tokenId, retrievalId, callback) {
+        callApiMethod('retrieveNonFungibleTokenRetrievalProgress', [tokenId, retrievalId], callback);
+    }
+
+    ApiProxy.prototype.transferNonFungibleToken = function (tokenId, receivingDevice, asyncProc, callback) {
+        if (typeof asyncProc === 'function') {
+            callback = asyncProc;
+            asyncProc = undefined;
+        }
+
+        callApiMethod('transferNonFungibleToken', [tokenId, receivingDevice, asyncProc], callback);
+    }
+
+    ApiProxy.prototype.retrieveNonFungibleTokenTransferProgress = function (tokenId, transferId, callback) {
+        callApiMethod('retrieveNonFungibleTokenTransferProgress', [tokenId, transferId], callback);
+    }
+
     ApiProxy.prototype.createWsNotifyChannel = function (eventName) {
         return new WsNotifyChannel(this, eventName);
     };
