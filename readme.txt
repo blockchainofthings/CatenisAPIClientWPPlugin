@@ -74,6 +74,17 @@ However, when doing it on the "Catenis API Client" meta box on a WordPress page'
 
 == Changelog ==
 
+= 4.0.0 =
+* Added support for changes introduced by version 0.12 of the Catenis API: new non-fungible assets feature, including
+the new API methods Issue Non-Fungible Asset, Reissue Non-Fungible Asset, Retrieve Non-Fungible Asset Issuance
+Progress, Retrieve Non-Fungible Token, Retrieve Non-Fungible Token Retrieval Progress, Transfer Non-Fungible Token,
+and Retrieve Non-Fungible Token Transfer Progress.
+* The issuance event entries returned by the *retrieveAssetIssuanceHistory* method for non-fungible assets are different
+from the ones returned for regular (fungible) assets as per the new behavior of version 0.12 of the Catenis API. The
+observed differences are: the `amount` key is replaced by a new `nfTokenIds` key, which lists the IDs of the
+non-fungible tokens that have been issued; and the `holdingDevice` key is replaced by a new `holdingDevices` key, which
+lists the Catenis virtual devices to which the issued non-fungible tokens have been assigned.
+
 = 3.0.0 =
 * Added support for changes introduced by version 0.11 of the Catenis API: new asset export feature, including the new
 API methods Export Asset, Migrate Asset, Asset Export Outcome, Asset Migration Outcome, List Exported Assets, and
@@ -113,6 +124,9 @@ property named `migrated`, the value of which is always `true`, is present.
 * Initial working version. Exposes all Catenis API methods (as of version 0.6 of the Catenis API), but does not include support for notifications.
 
 == Upgrade Notice ==
+
+= 4.0.0 =
+Upgrade to this version to take advantage of the new features found in version 0.12 of the Catenis API. This is also a requirement if using the plugin with version 6.0 of WordPress.
 
 = 3.0.0 =
 Upgrade to this version to take advantage of the new features found in version 0.11 of the Catenis API.
